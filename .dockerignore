@@ -1,0 +1,11 @@
+.git
+.env
+__pycache__
+**/__pycache__
+.pytest_cache
+node_modules
+web/dist
+web/node_modules
+data/*.db
+data/bird
+data/eval/*.json.tmp

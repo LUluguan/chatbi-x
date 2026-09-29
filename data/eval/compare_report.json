@@ -1,0 +1,1445 @@
+{
+  "single_shot": {
+    "mode": "single_shot",
+    "accuracy": 0.53,
+    "total": 100,
+    "details": [
+      {
+        "question": "What is the highest eligible free rate for K-12 students in the schools in Alameda County?",
+        "predicted_sql": "SELECT MAX(CAST(\"Free Meal Count (K-12)\" AS REAL) / CAST(\"Enrollment (K-12)\" AS REAL)) FROM frpm WHERE \"County Name\" = 'Alameda'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the lowest three eligible free rates for students aged 5-17 in continuation schools.",
+        "predicted_sql": "SELECT (CAST(f.`Free Meal Count (Ages 5-17)` AS REAL) / f.`Enrollment (Ages 5-17)`) AS free_rate FROM frpm AS f WHERE f.`School Type` = 'Continuation Schools' ORDER BY free_rate ASC LIMIT 3;",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the zip code of all the charter schools in Fresno County Office of Education.",
+        "predicted_sql": "SELECT T2.Zip FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`Charter School (Y/N)` = 1 AND T1.`District Name` = 'Fresno County Office of Education'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the unabbreviated mailing street address of the school with the highest FRPM count for K-12 students?",
+        "predicted_sql": "SELECT T3.MailStreet FROM frpm AS T1 INNER JOIN schools AS T3 ON T1.CDSCode = T3.CDSCode ORDER BY T1.`FRPM Count (K-12)` DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the phone numbers of the direct charter-funded schools that are opened after 2000/1/1.",
+        "predicted_sql": "SELECT T1.Phone FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.`Charter School (Y/N)` = 1 AND T1.FundingType = 'Directly funded' AND T1.OpenDate > '2000-01-01'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools with an average score in Math greater than 400 in the SAT test are exclusively virtual?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE Virtual = 'F' AND CDSCode IN (SELECT cds FROM satscores WHERE AvgScrMath > 400)",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the schools with the SAT test takers of over 500, please list the schools that are magnet schools or offer a magnet program.",
+        "predicted_sql": "SELECT T2.School FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T1.NumTstTakr > 500 AND T2.Magnet = 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number of the school that has the highest number of test takers with an SAT score of over 1500?",
+        "predicted_sql": "SELECT T1.Phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.NumGE1500 DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the number of SAT test takers of the schools with the highest FRPM count for K-12 students?",
+        "predicted_sql": "SELECT T2.NumTstTakr FROM frpm AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T1.`FRPM Count (K-12)` DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the schools with the average score in Math over 560 in the SAT test, how many schools are directly charter-funded?",
+        "predicted_sql": "SELECT COUNT(*) FROM satscores INNER JOIN schools ON satscores.cds = schools.CDSCode WHERE satscores.AvgScrMath > 560 AND schools.FundingType = 'Directly funded' AND schools.Charter = 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "For the school with the highest average score in Reading in the SAT test, what is its FRPM count for students aged 5-17?",
+        "predicted_sql": "SELECT T2.`FRPM Count (Ages 5-17)` FROM satscores AS T1 INNER JOIN frpm AS T2 ON T1.cds = T2.CDSCode ORDER BY T1.AvgScrRead DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the codes of the schools with a total enrollment of over 500.",
+        "predicted_sql": "SELECT CDSCode FROM frpm WHERE `Enrollment (K-12)` + `Enrollment (Ages 5-17)` > 500",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the schools with an SAT excellence rate of over 0.3, what is the highest eligible free rate for students aged 5-17?",
+        "predicted_sql": "SELECT MAX(CAST(f.`Free Meal Count (Ages 5-17)` AS REAL) / f.`Enrollment (Ages 5-17)`) FROM frpm f JOIN satscores s ON f.CDSCode = s.cds WHERE CAST(s.NumGE1500 AS REAL) / s.NumTstTakr > 0.3",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the phone numbers of the schools with the top 3 SAT excellence rate.",
+        "predicted_sql": "SELECT T1.Phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY CAST(T2.NumGE1500 AS REAL) / T2.NumTstTakr DESC LIMIT 3",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List the top five schools, by descending order, from the highest to the lowest, the most number of Enrollment (Ages 5-17). Please give their NCES school identification number.",
+        "predicted_sql": "SELECT T2.NCESSchool FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode ORDER BY T1.`Enrollment (Ages 5-17)` DESC LIMIT 5",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which active district has the highest average score in Reading?",
+        "predicted_sql": "SELECT T2.District FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.StatusType = 'Active' AND T1.rtype = 'D' ORDER BY T1.AvgScrRead DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools in merged Alameda have number of test takers less than 100?",
+        "predicted_sql": "SELECT COUNT(*) FROM satscores WHERE dname = 'Alameda County Office of Education' AND NumTstTakr < 100",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Rank schools by their average score in Writing where the score is greater than 499, showing their charter numbers.",
+        "predicted_sql": "SELECT T2.CharterNum FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T1.AvgScrWrite > 499 AND T2.CharterNum IS NOT NULL ORDER BY T1.AvgScrWrite DESC",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools in Fresno (directly funded) have number of test takers not more than 250?",
+        "predicted_sql": "SELECT COUNT(*) FROM satscores s JOIN frpm f ON s.cds = f.CDSCode WHERE f.`County Name` = 'Fresno' AND f.`Charter Funding Type` = 'Directly funded' AND s.NumTstTakr <= 250",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number of the school that has the highest average score in Math?",
+        "predicted_sql": "SELECT T1.Phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.AvgScrMath DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools in Amador which the Low Grade is 9 and the High Grade is 12?",
+        "predicted_sql": "SELECT COUNT(*) FROM frpm WHERE County Name = 'Amador' AND Low Grade = '9' AND High Grade = '12'",
+        "acc": 0.0,
+        "ok": false,
+        "error": "near \"Name\": syntax error"
+      },
+      {
+        "question": "In Los Angeles how many schools have more than 500 free meals but less than 700 free or reduced price meals for K-12?",
+        "predicted_sql": "SELECT COUNT(*) FROM frpm WHERE \"County Name\" = 'Los Angeles' AND \"Free Meal Count (K-12)\" > 500 AND \"FRPM Count (K-12)\" < 700",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which school in Contra Costa has the highest number of test takers?",
+        "predicted_sql": "SELECT sname FROM satscores WHERE cname = 'Contra Costa' ORDER BY NumTstTakr DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List the names of schools with more than 30 difference in enrollements between K-12 and ages 5-17? Please also give the full street adress of the schools.",
+        "predicted_sql": "SELECT T1.School, T2.Street FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`Enrollment (K-12)` - T1.`Enrollment (Ages 5-17)` > 30",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: T1.School"
+      },
+      {
+        "question": "Give the names of the schools with the percent eligible for free meals in K-12 is more than 0.1 and test takers whose test score is greater than or equal to 1500?",
+        "predicted_sql": "SELECT T1.School Name FROM frpm AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.`Free Meal Count (K-12)` / T1.`Enrollment (K-12)` > 0.1 AND T2.NumGE1500 >= 1500",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: T1.School"
+      },
+      {
+        "question": "Name schools in Riverside which the average of average math score for SAT is grater than 400, what is the funding type of these schools?",
+        "predicted_sql": "SELECT T2.FundingType FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode WHERE T2.County = 'Riverside' GROUP BY T2.CDSCode HAVING AVG(T1.AvgScrMath) > 400",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "State the names and full communication address of high schools in Monterey which has more than 800 free or reduced price meals for ages 15-17?",
+        "predicted_sql": "SELECT T1.School, T1.Street, T1.City, T1.State, T1.Zip FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.County = 'Monterey' AND T2.School Type = 'High Schools (Public)' AND T2.`FRPM Count (Ages 5-17)` > 800",
+        "acc": 0.0,
+        "ok": false,
+        "error": "near \"Type\": syntax error"
+      },
+      {
+        "question": "What is the average score in writing for the schools that were opened after 1991 or closed before 2000? List the school names along with the score. Also, list the communication number of the schools if there is any.",
+        "predicted_sql": "SELECT s.School, sc.AvgScrWrite, s.Phone FROM schools s JOIN satscores sc ON s.CDSCode = sc.cds WHERE (s.OpenDate > '1991-12-31' OR s.ClosedDate < '2000-01-01') AND sc.AvgScrWrite IS NOT NULL",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Consider the average difference between K-12 enrollment and 15-17 enrollment of schools that are locally funded, list the names and DOC type of schools which has a difference above this average.",
+        "predicted_sql": "SELECT T1.School, T1.DOCType FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.FundingType = 'Locally funded' AND (T2.\"Enrollment (K-12)\" - T2.\"Enrollment (Ages 5-17)\") > (SELECT AVG(T2.\"Enrollment (K-12)\" - T2.\"Enrollment (Ages 5-17)\") FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.FundingType = 'Locally funded')",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "When did the first-through-twelfth-grade school with the largest enrollment open?",
+        "predicted_sql": "SELECT T2.OpenDate FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`Educational Option Type` = 'K-12' ORDER BY T1.`Enrollment (K-12)` DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which cities have the top 5 lowest enrollment number for students in grades 1 through 12?",
+        "predicted_sql": "SELECT City FROM schools WHERE CDSCode IN (SELECT CDSCode FROM frpm ORDER BY \"Enrollment (K-12)\" ASC LIMIT 5)",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the eligible free rate of the 10th and 11th schools with the highest enrolment for students in grades 1 through 12?",
+        "predicted_sql": "SELECT (Free Meal Count (K-12) * 1.0 / `Enrollment (K-12)`) AS eligible_free_rate FROM frpm WHERE `Educational Option Type` = 'Traditional' ORDER BY `Enrollment (K-12)` DESC LIMIT 2 OFFSET 9",
+        "acc": 0.0,
+        "ok": false,
+        "error": "near \"Meal\": syntax error"
+      },
+      {
+        "question": "What is the eligible free or reduced price meal rate for the top 5 schools in grades 1-12 with the highest free or reduced price meal count of the schools with the ownership code 66?",
+        "predicted_sql": "SELECT CAST(`FRPM Count (K-12)` AS REAL) / `Enrollment (K-12)` AS rate FROM frpm WHERE `Low Grade` = 'K' AND `High Grade` = '12' AND CDSCode IN (SELECT CDSCode FROM schools WHERE SOC = '66') ORDER BY `FRPM Count (K-12)` DESC LIMIT 5",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "If there are any, what are the websites address of the schools with a free meal count of 1,900-2,000 to students aged 5-17? Include the name of the school.",
+        "predicted_sql": "SELECT T1.Website, T1.School FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.`Free Meal Count (Ages 5-17)` BETWEEN 1900 AND 2000",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the free rate for students between the ages of 5 and 17 at the school run by Kacey Gibson?",
+        "predicted_sql": "SELECT CAST(f.`Free Meal Count (Ages 5-17)` AS REAL) / f.`Enrollment (Ages 5-17)` FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE s.AdmFName1 = 'Kacey' AND s.AdmLName1 = 'Gibson'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the administrator's email address of the chartered school with the fewest students enrolled in grades 1 through 12?",
+        "predicted_sql": "SELECT T3.AdmEmail1 FROM frpm AS T1 INNER JOIN schools AS T3 ON T1.CDSCode = T3.CDSCode WHERE T1.`Charter School (Y/N)` = 1 ORDER BY T1.`Enrollment (K-12)` ASC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Under whose administration is the school with the highest number of students scoring 1500 or more on the SAT? Indicate their full names.",
+        "predicted_sql": "SELECT T1.AdmFName1, T1.AdmLName1, T1.AdmFName2, T1.AdmLName2, T1.AdmFName3, T1.AdmLName3 FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.NumGE1500 DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the complete address of the school with the lowest excellence rate? Indicate the Street, City, Zip and State.",
+        "predicted_sql": "SELECT T1.Street, T1.City, T1.Zip, T1.State FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY CAST(T2.NumGE1500 AS REAL) / T2.NumTstTakr ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What are the webpages for the Los Angeles County school that has between 2,000 and 3,000 test takers?",
+        "predicted_sql": "SELECT T3.Website FROM satscores AS T1 INNER JOIN schools AS T3 ON T1.cds = T3.CDSCode WHERE T1.NumTstTakr BETWEEN 2000 AND 3000 AND T3.County = 'Los Angeles'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average number of test takers from Fresno schools that opened between 1/1/1980 and 12/31/1980?",
+        "predicted_sql": "SELECT AVG(T2.NumTstTakr) FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.County = 'Fresno' AND strftime('%Y', T1.OpenDate) = '1980'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the telephone number for the school with the lowest average score in reading in Fresno Unified?",
+        "predicted_sql": "SELECT T1.Phone FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T2.dname = 'Fresno Unified' ORDER BY T2.AvgScrRead ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List the names of virtual schools that are among the top 5 in their respective counties based on average reading scores.",
+        "predicted_sql": "SELECT s.School FROM schools s JOIN satscores sa ON s.CDSCode = sa.cds WHERE s.Virtual = 'F' AND sa.AvgScrRead IS NOT NULL AND (SELECT COUNT(*) FROM satscores sa2 JOIN schools s2 ON sa2.cds = s2.CDSCode WHERE s2.County = s.County AND s2.Virtual = 'F' AND sa2.AvgScrRead > sa.AvgScrRead) < 5",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the type of education offered in the school who scored the highest average in Math?",
+        "predicted_sql": "SELECT T1.EdOpsName FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.AvgScrMath DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average math score of the school with the lowest average score for all subjects, and in which county is it located?",
+        "predicted_sql": "SELECT T1.AvgScrMath, T1.cname FROM satscores AS T1 ORDER BY (T1.AvgScrMath + T1.AvgScrRead + T1.AvgScrWrite) ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average writing score of the school who has the highest number of test takers whose total SAT sscores are greater or equal to 1500? Indicate the city to where the school is situated.",
+        "predicted_sql": "SELECT T2.AvgScrWrite, T1.City FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.NumGE1500 DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average writing score of each of the schools managed by Ricci Ulrich? List the schools and the corresponding average writing scores.",
+        "predicted_sql": "SELECT s.School, AVG(sa.AvgScrWrite) AS avg_writing_score FROM schools s JOIN satscores sa ON s.CDSCode = sa.cds WHERE s.AdmFName1 = 'Ricci' AND s.AdmLName1 = 'Ulrich' GROUP BY s.School",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which state special schools have the highest number of enrollees from grades 1 through 12?",
+        "predicted_sql": "SELECT T1.School, T1.Enrollment (K-12) FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.DOC = '31' ORDER BY T1.`Enrollment (K-12)` DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": false,
+        "error": "near \"(\": syntax error"
+      },
+      {
+        "question": "What is the monthly average number of schools that opened in Alameda County under the jurisdiction of the Elementary School District in 1980?",
+        "predicted_sql": "SELECT COUNT(*) / 12.0 FROM schools WHERE County = 'Alameda' AND DOC = '52' AND strftime('%Y', OpenDate) = '1980';",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the ratio of merged Unified School District schools in Orange County to merged Elementary School District schools?",
+        "predicted_sql": "SELECT CAST(SUM(CASE WHEN DOC = '54' THEN 1 ELSE 0 END) AS REAL) / SUM(CASE WHEN DOC = '52' THEN 1 ELSE 0 END) FROM schools WHERE County = 'Orange' AND StatusType = 'Merged'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which different county has the most number of closed schools? Please provide the name of each school as well as the closure date.",
+        "predicted_sql": "SELECT County, School, ClosedDate FROM schools WHERE StatusType = 'Closed' AND County = (SELECT County FROM schools WHERE StatusType = 'Closed' GROUP BY County ORDER BY COUNT(*) DESC LIMIT 1)",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the postal street address for the school with the 7th highest Math average? Indicate the school's name.",
+        "predicted_sql": "SELECT T1.Street, T1.School FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.AvgScrMath DESC LIMIT 1 OFFSET 6",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "In which mailing street address can you find the school that has the lowest average score in reading? Also give the school's name.",
+        "predicted_sql": "SELECT T1.MailStreet, T1.School FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.AvgScrRead ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total number of schools whose total SAT scores are greater or equal to 1500 whose mailing city is Lakeport?",
+        "predicted_sql": "SELECT COUNT(*) FROM satscores s JOIN schools sc ON s.cds = sc.CDSCode WHERE (s.AvgScrRead + s.AvgScrMath + s.AvgScrWrite) >= 1500 AND sc.MailCity = 'Lakeport'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many test takers are there at the school/s whose mailing city address is in Fresno?",
+        "predicted_sql": "SELECT SUM(T2.NumTstTakr) FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.MailCity = 'Fresno'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please specify all of the schools and their related mailing zip codes that are under Avetik Atoian's administration.",
+        "predicted_sql": "SELECT T2.School, T2.MailZip FROM schools AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.AdmFName1 = 'Avetik' AND T1.AdmLName1 = 'Atoian'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Of the schools with a mailing state address in California, what is the ratio of the schools located in the county of Colusa against the school located in the county of Humboldt?",
+        "predicted_sql": "SELECT CAST(SUM(CASE WHEN County = 'Colusa' THEN 1 ELSE 0 END) AS REAL) / SUM(CASE WHEN County = 'Humboldt' THEN 1 ELSE 0 END) FROM schools WHERE MailState = 'CA'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Of all the schools with a mailing state address in California, how many are active in San Joaquin city?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE MailState = 'CA' AND StatusType = 'Active' AND MailCity = 'San Joaquin'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number and extension number for the school that had the 333rd highest average writing score?",
+        "predicted_sql": "SELECT T1.Phone, T1.Ext FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.AvgScrWrite DESC LIMIT 1 OFFSET 332",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number and extension number for the school with the zip code 95203-3704? Indicate the school's name.",
+        "predicted_sql": "SELECT School, Phone, Ext FROM schools WHERE Zip = '95203-3704'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the website for the schools under the administrations of Mike Larson and Dante Alvarez?",
+        "predicted_sql": "SELECT T1.Website FROM schools AS T1 JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.AdmFName1 = 'Mike' AND T1.AdmLName1 = 'Larson' OR T1.AdmFName1 = 'Dante' AND T1.AdmLName1 = 'Alvarez'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What are the websites for all the partially virtual chartered schools located in San Joaquin?",
+        "predicted_sql": "SELECT Website FROM schools WHERE Virtual = 'P' AND Charter = 1 AND County = 'San Joaquin'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many chartered schools located in the city of Hickman are owned by the Elementary School District?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE City = 'Hickman' AND Charter = 1 AND DOC = '52';",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total number of non-chartered schools in the county of Los Angeles with a percent (%) of eligible free meals for grades 1 through 12 that is less than 0.18%?",
+        "predicted_sql": "SELECT COUNT(*) FROM frpm WHERE \"County Name\" = 'Los Angeles' AND \"Charter School (Y/N)\" = 0 AND \"Free Meal Count (K-12)\" * 100 / \"Enrollment (K-12)\" < 0.18",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "In chartered schools with charter number 00D2, what are the names of all the administrators? Include the name of the school and the city to which it belongs",
+        "predicted_sql": "SELECT School, City, AdmFName1, AdmLName1, AdmFName2, AdmLName2, AdmFName3, AdmLName3 FROM schools WHERE Charter = 1 AND CharterNum = '00D2'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total number of schools with a mailing city in Hickman belonging to the charter number 00D4?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE MailCity = 'Hickman' AND CharterNum = '00D4';",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the ratio in percentage of Santa Clara County schools that are locally funded compared to all other types of charter school funding?",
+        "predicted_sql": "SELECT CAST(SUM(CASE WHEN Charter Funding Type = 'Locally funded' THEN 1 ELSE 0 END) AS REAL) * 100 / COUNT(*) FROM frpm WHERE County Name = 'Santa Clara' AND Charter School (Y/N) = 1",
+        "acc": 0.0,
+        "ok": false,
+        "error": "near \"Funding\": syntax error"
+      },
+      {
+        "question": "Between 1/1/2000 to 12/31/2005, how many directly funded schools opened in the county of Stanislaus?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE County = 'Stanislaus' AND FundingType = 'Directly funded' AND OpenDate BETWEEN '2000-01-01' AND '2005-12-31';",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total amount of Community College District closure in 1989 in the city of San Francisco?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE City = 'San Francisco' AND District LIKE '%Community College District%' AND ClosedDate LIKE '1989%'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which county reported the most number of school closure in the 1980s with school wonership code belonging to Youth Authority Facilities (CEA)?",
+        "predicted_sql": "SELECT County FROM schools WHERE SOC = '11' AND ClosedDate BETWEEN '1980-01-01' AND '1989-12-31' GROUP BY County ORDER BY COUNT(*) DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please provide the National Center for Educational Statistics school district identification number for all schools with a School Ownership Code that are part of the State Special Schools.",
+        "predicted_sql": "SELECT NCESDist FROM schools WHERE SOC = '31'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many active and closed District Community Day Schools are there in the county of Alpine?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE County = 'Alpine' AND District = 'Alpine County Office of Education' AND SOC = '60' AND StatusType IN ('Active', 'Closed')",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the district code for the School that does not offer a magnet program in the city of Fresno?",
+        "predicted_sql": "SELECT T2.District Code FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.City = 'Fresno' AND T1.Magnet = 0",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: T2.District"
+      },
+      {
+        "question": "How many students from the ages of 5 to 17 are enrolled at the State Special School school in Fremont for the 2014-2015 academic year?",
+        "predicted_sql": "SELECT T1.`Enrollment (Ages 5-17)` FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.EdOpsCode = 'SSS' AND T2.City = 'Fremont' AND T1.`Academic Year` = '2014-2015'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the free or reduced price meal count for ages 5 to 17 in the Youth Authority School with a mailing street address of PO Box 1040?",
+        "predicted_sql": "SELECT T1.`FRPM Count (Ages 5-17)` FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.School = 'Youth Authority School' AND T2.MailStreet = 'PO Box 1040'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the lowest grade for the District Special Education Consortia School with National Center for Educational Statistics school district identification number of 0613360?",
+        "predicted_sql": "SELECT T1.LowGrade FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.EdOpsCode = 'SPECON' AND T2.NCESDist = '0613360'",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: T1.LowGrade"
+      },
+      {
+        "question": "What is the educational level name for the schools with Breakfast Provision 2 in county code 37? Indicate the name of the school.",
+        "predicted_sql": "",
+        "acc": 0.0,
+        "ok": false,
+        "error": "预测为空 SQL"
+      },
+      {
+        "question": "What is the city location of the high school level school with Lunch Provision 2 whose lowest grade is 9 and the highest grade is 12 in the county of Merced?",
+        "predicted_sql": "SELECT T3.City FROM frpm AS T1 INNER JOIN schools AS T3 ON T1.CDSCode = T3.CDSCode WHERE T1.`NSLP Provision Status` = 'Lunch Provision 2' AND T1.`Low Grade` = '9' AND T1.`High Grade` = '12' AND T1.`County Name` = 'Merced' AND T3.EILCode = 'HS'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which schools served a grade span of Kindergarten to 9th grade in the county of Los Angeles and what is its Percent (%) Eligible FRPM (Ages 5-17)?",
+        "predicted_sql": "SELECT School Name, `Percent (%) Eligible FRPM (Ages 5-17)` FROM frpm WHERE `County Name` = 'Los Angeles' AND `Low Grade` = 'K' AND `High Grade` = '9';",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: School"
+      },
+      {
+        "question": "What is the most common type of grade span served in the city of Adelanto?",
+        "predicted_sql": "SELECT GSserved FROM schools WHERE City = 'Adelanto' GROUP BY GSserved ORDER BY COUNT(*) DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Between San Diego and Santa Barbara, which county offers the most number of schools that does not offer physical building? Indicate the amount.",
+        "predicted_sql": "SELECT County, COUNT(*) AS num_schools FROM schools WHERE County IN ('San Diego', 'Santa Barbara') AND Virtual = 'F' GROUP BY County ORDER BY num_schools DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the school type of the school with the highest latitude? Indicate the name of the school as well as the latitude coordinates.",
+        "predicted_sql": "SELECT School, SchoolType, Latitude FROM schools ORDER BY Latitude DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: SchoolType"
+      },
+      {
+        "question": "In which city can you find the school in the state of California with the lowest latitude coordinates and what is its lowest grade? Indicate the school name.",
+        "predicted_sql": "SELECT T2.City, T1.LowGrade, T1.School FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T2.State = 'CA' ORDER BY T2.Latitude ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: T1.LowGrade"
+      },
+      {
+        "question": "What is the grade span offered in the school with the highest longitude?",
+        "predicted_sql": "SELECT GSoffered FROM schools ORDER BY ABS(Longitude) DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Of the schools that offers a magnet program serving a grade span of Kindergarten to 8th grade, how many offers Multiple Provision Types? List the number of cities that offers a Kindergarten to 8th grade span and indicate how many schools are there serving such grade span for each city.",
+        "predicted_sql": "SELECT COUNT(*) FROM frpm WHERE Magnet = 1 AND \"Low Grade\" = 'K' AND \"High Grade\" = '8' AND \"NSLP Provision Status\" = 'Multiple Provision Types';",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: Magnet"
+      },
+      {
+        "question": "What are the two most common first names among the school administrators? Indicate the district to which they administer.",
+        "predicted_sql": "SELECT AdmFName1, District FROM schools WHERE AdmFName1 IS NOT NULL GROUP BY AdmFName1 ORDER BY COUNT(*) DESC LIMIT 2",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the Percent (%) Eligible Free (K-12) in the school administered by an administrator whose first name is Alusine. List the district code of the school.",
+        "predicted_sql": "SELECT frpm.`Percent (%) Eligible Free (K-12)`, frpm.`District Code` FROM frpm INNER JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE schools.AdmFName1 = 'Alusine'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the administrator's last name that oversees the school with Charter number 40? Indicate the district, the county where the school is situated, and the name of the school.",
+        "predicted_sql": "SELECT AdmLName1, District, County, School FROM schools WHERE CharterNum = '0040'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What are the valid e-mail addresses of the administrator of the school located in the San Bernardino county, City of San Bernardino City Unified that opened between 1/1/2009 to 12/31/2010 whose school types are public Intermediate/Middle Schools and Unified Schools?",
+        "predicted_sql": "SELECT T3.AdmEmail1 FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.County = 'San Bernardino' AND T1.City = 'San Bernardino' AND T1.District = 'San Bernardino City Unified' AND T1.OpenDate BETWEEN '2009-01-01' AND '2010-12-31' AND T2.`School Type` = 'Intermediate/Middle Schools (Public)' AND T1.DOC = '54'",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: T3.AdmEmail1"
+      },
+      {
+        "question": "What is the administrator's email address for the school with the highest number of test takers who received SAT scores of at least 1500?Provide the name of the school.",
+        "predicted_sql": "SELECT T1.AdmEmail1, T1.School FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds ORDER BY T2.NumGE1500 DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many accounts who choose issuance after transaction are staying in East Bohemia region?",
+        "predicted_sql": "SELECT COUNT(*) FROM account a JOIN district d ON a.district_id = d.district_id WHERE a.frequency = 'POPLATEK PO OBRATU' AND d.A3 = 'East Bohemia'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many accounts who have region in Prague are eligible for loans?",
+        "predicted_sql": "SELECT COUNT(*) FROM account a JOIN district d ON a.district_id = d.district_id WHERE d.A3 = 'Prague'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "The average unemployment ratio of 1995 and 1996, which one has higher percentage?",
+        "predicted_sql": "SELECT CASE WHEN A12 > A13 THEN '1995' ELSE '1996' END AS higher_year FROM (SELECT AVG(A12) AS A12, AVG(A13) AS A13 FROM district)",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List out the no. of districts that have female average salary is more than 6000 but less than 10000?",
+        "predicted_sql": "SELECT COUNT(DISTINCT T1.district_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'F' AND T2.A11 > 6000 AND T2.A11 < 10000",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many male customers who are living in North Bohemia have average salary greater than 8000?",
+        "predicted_sql": "SELECT COUNT(*) FROM client c JOIN district d ON c.district_id = d.district_id WHERE c.gender = 'M' AND d.A3 = 'North Bohemia' AND d.A11 > 8000",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List out the account numbers of female clients who are oldest and has lowest average salary, calculate the gap between this lowest average salary with the highest average salary?",
+        "predicted_sql": "SELECT T1.account_id, T3.average_salary - T2.average_salary AS gap FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN client AS T3 ON T1.district_id = T3.district_id WHERE T3.gender = 'F' ORDER BY T3.birth_date ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": false,
+        "error": "no such column: T3.average_salary"
+      },
+      {
+        "question": "List out the account numbers of clients who are youngest and have highest average salary?",
+        "predicted_sql": "SELECT T1.account_id FROM account AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id INNER JOIN client AS T3 ON T3.district_id = T2.district_id ORDER BY T3.birth_date DESC, T2.A11 DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many customers who choose statement of weekly issuance are Owner?",
+        "predicted_sql": "SELECT COUNT(DISTINCT d.client_id) FROM disp d JOIN account a ON d.account_id = a.account_id WHERE a.frequency = 'POPLATEK TYDNE' AND d.type = 'OWNER'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List out the id number of client who choose statement of issuance after transaction are Disponent?",
+        "predicted_sql": "SELECT DISTINCT c.client_id FROM client c JOIN disp d ON c.client_id = d.client_id JOIN account a ON d.account_id = a.account_id WHERE d.type = 'DISPONENT' AND a.frequency = 'POPLATEK PO OBRATU'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the accounts who have approved loan date in 1997, list out the accounts that have the lowest approved amount and choose weekly issuance statement.",
+        "predicted_sql": "SELECT account_id FROM loan WHERE strftime('%Y', date) = '1997' AND status = 'A' AND amount = (SELECT MIN(amount) FROM loan WHERE strftime('%Y', date) = '1997' AND status = 'A') AND account_id IN (SELECT account_id FROM account WHERE frequency = 'POPLATEK TYDNE')",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the accounts who have loan validity more than 12 months, list out the accounts that have the highest approved amount and have account opening date in 1993.",
+        "predicted_sql": "SELECT T1.account_id FROM loan AS T1 INNER JOIN account AS T2 ON T1.account_id = T2.account_id WHERE T1.duration > 12 AND STRFTIME('%Y', T2.date) = '1993' ORDER BY T1.amount DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      }
+    ],
+    "by_difficulty": {
+      "simple": {
+        "accuracy": 0.6271186440677966,
+        "total": 59
+      },
+      "moderate": {
+        "accuracy": 0.4,
+        "total": 35
+      },
+      "challenging": {
+        "accuracy": 0.3333333333333333,
+        "total": 6
+      }
+    }
+  },
+  "agent": {
+    "mode": "agent",
+    "accuracy": 0.33,
+    "total": 100,
+    "details": [
+      {
+        "question": "What is the highest eligible free rate for K-12 students in the schools in Alameda County?",
+        "predicted_sql": "SELECT MAX(\"Free Meal Count (K-12)\" * 1.0 / \"Enrollment (K-12)\") AS max_rate FROM frpm WHERE \"County Name\" = 'Alameda' AND \"Enrollment (K-12)\" > 0",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the lowest three eligible free rates for students aged 5-17 in continuation schools.",
+        "predicted_sql": "SELECT \"School Name\", \"Free Meal Count (Ages 5-17)\", \"Enrollment (Ages 5-17)\", \"Free Meal Count (Ages 5-17)\" * 1.0 / \"Enrollment (Ages 5-17)\" AS rate FROM frpm WHERE \"School Type\" = 'Continuation High Schools' AND \"Enrollment (Ages 5-17)\" > 0 ORDER BY rate ASC LIMIT 3",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the zip code of all the charter schools in Fresno County Office of Education.",
+        "predicted_sql": "SELECT DISTINCT s.Zip FROM schools s JOIN frpm f ON s.CDSCode = f.CDSCode WHERE f.\"District Name\" = 'Fresno County Office of Education' AND f.\"Charter School (Y/N)\" = 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the unabbreviated mailing street address of the school with the highest FRPM count for K-12 students?",
+        "predicted_sql": "SELECT s.MailStreet FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode ORDER BY f.\"FRPM Count (K-12)\" DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the phone numbers of the direct charter-funded schools that are opened after 2000/1/1.",
+        "predicted_sql": "SELECT DISTINCT s.Phone FROM schools s JOIN frpm f ON s.CDSCode = f.CDSCode WHERE f.\"Charter School (Y/N)\" = 1 AND s.FundingType = 'Directly funded' AND s.OpenDate > '2000-01-01'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools with an average score in Math greater than 400 in the SAT test are exclusively virtual?",
+        "predicted_sql": "SELECT COUNT(DISTINCT s.CDSCode) FROM schools s JOIN satscores sat ON s.CDSCode = sat.cds WHERE sat.AvgScrMath > 400 AND s.Virtual = 'F'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the schools with the SAT test takers of over 500, please list the schools that are magnet schools or offer a magnet program.",
+        "predicted_sql": "SELECT s.sname FROM satscores s JOIN schools sc ON s.cds = sc.CDSCode WHERE s.NumTstTakr > 500 AND sc.Magnet = 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number of the school that has the highest number of test takers with an SAT score of over 1500?",
+        "predicted_sql": "SELECT s.Phone FROM satscores sc JOIN schools s ON s.CDSCode = sc.cds ORDER BY sc.NumGE1500 DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the number of SAT test takers of the schools with the highest FRPM count for K-12 students?",
+        "predicted_sql": "SELECT s.NumTstTakr FROM frpm f JOIN satscores s ON s.cds = f.CDSCode ORDER BY f.`FRPM Count (K-12)` DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the schools with the average score in Math over 560 in the SAT test, how many schools are directly charter-funded?",
+        "predicted_sql": "SELECT COUNT(*) FROM satscores WHERE AvgScrMath > 560 AND cds IN (SELECT CDSCode FROM frpm WHERE \"Charter Funding Type\" = 'Directly funded')",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "For the school with the highest average score in Reading in the SAT test, what is its FRPM count for students aged 5-17?",
+        "predicted_sql": "SELECT f.\"FRPM Count (Ages 5-17)\" FROM satscores s JOIN frpm f ON s.cds = f.CDSCode ORDER BY s.AvgScrRead DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the codes of the schools with a total enrollment of over 500.",
+        "predicted_sql": "SELECT CDSCode FROM frpm WHERE \"Enrollment (K-12)\" + \"Enrollment (Ages 5-17)\" > 500",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the schools with an SAT excellence rate of over 0.3, what is the highest eligible free rate for students aged 5-17?",
+        "predicted_sql": "SELECT MAX(f.`Percent (%) Eligible Free (Ages 5-17)`) FROM frpm f JOIN satscores s ON f.CDSCode = s.cds WHERE CAST(s.NumGE1500 AS REAL) / s.NumTstTakr > 0.3",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please list the phone numbers of the schools with the top 3 SAT excellence rate.",
+        "predicted_sql": "SELECT s.Phone, sc.sname, CAST(sc.NumGE1500 AS REAL) / sc.NumTstTakr AS rate FROM satscores sc JOIN schools s ON s.CDSCode = sc.cds WHERE sc.NumTstTakr > 0 ORDER BY rate DESC LIMIT 3",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List the top five schools, by descending order, from the highest to the lowest, the most number of Enrollment (Ages 5-17). Please give their NCES school identification number.",
+        "predicted_sql": "SELECT s.School, s.NCESDist, s.NCESSchool, f.\"Enrollment (Ages 5-17)\" FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode ORDER BY f.\"Enrollment (Ages 5-17)\" DESC LIMIT 5",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which active district has the highest average score in Reading?",
+        "predicted_sql": "SELECT s.District, AVG(sats.AvgScrRead) AS avg_read FROM satscores sats JOIN schools s ON sats.cds = s.CDSCode WHERE s.StatusType = 'Active' AND sats.rtype = 'D' GROUP BY s.District ORDER BY avg_read DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools in merged Alameda have number of test takers less than 100?",
+        "predicted_sql": "SELECT COUNT(*) FROM satscores WHERE cname = 'Alameda' AND NumTstTakr < 100",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Rank schools by their average score in Writing where the score is greater than 499, showing their charter numbers.",
+        "predicted_sql": "SELECT sname, CharterNum, AvgScrWrite FROM satscores JOIN schools ON satscores.cds = schools.CDSCode WHERE AvgScrWrite > 499 AND CharterNum IS NOT NULL ORDER BY AvgScrWrite DESC",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools in Fresno (directly funded) have number of test takers not more than 250?",
+        "predicted_sql": "SELECT COUNT(DISTINCT s.cds) FROM satscores s JOIN frpm f ON s.cds = f.CDSCode WHERE f.\"County Name\" = 'Fresno' AND f.\"Charter Funding Type\" = 'Directly funded' AND s.NumTstTakr <= 250",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number of the school that has the highest average score in Math?",
+        "predicted_sql": "SELECT s.Phone FROM satscores sc JOIN schools s ON s.CDSCode = sc.cds ORDER BY sc.AvgScrMath DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many schools in Amador which the Low Grade is 9 and the High Grade is 12?",
+        "predicted_sql": "SELECT COUNT(*) FROM frpm WHERE \"County Name\" = 'Amador' AND \"Low Grade\" = '9' AND \"High Grade\" = '12'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "In Los Angeles how many schools have more than 500 free meals but less than 700 free or reduced price meals for K-12?",
+        "predicted_sql": "SELECT COUNT(*) FROM frpm WHERE \"County Name\" = 'Los Angeles' AND \"Free Meal Count (K-12)\" > 500 AND \"FRPM Count (K-12)\" < 700",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which school in Contra Costa has the highest number of test takers?",
+        "predicted_sql": "SELECT sname, NumTstTakr FROM satscores WHERE cname = 'Contra Costa' ORDER BY NumTstTakr DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List the names of schools with more than 30 difference in enrollements between K-12 and ages 5-17? Please also give the full street adress of the schools.",
+        "predicted_sql": "SELECT frpm.\"School Name\", schools.Street FROM frpm JOIN schools ON frpm.CDSCode = schools.CDSCode WHERE (frpm.\"Enrollment (K-12)\" - frpm.\"Enrollment (Ages 5-17)\") > 30",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Give the names of the schools with the percent eligible for free meals in K-12 is more than 0.1 and test takers whose test score is greater than or equal to 1500?",
+        "predicted_sql": "SELECT s.sname FROM frpm f JOIN satscores s ON f.CDSCode = s.cds WHERE f.\"Percent (%) Eligible Free (K-12)\" > 0.1 AND s.NumGE1500 > 0",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Name schools in Riverside which the average of average math score for SAT is grater than 400, what is the funding type of these schools?",
+        "predicted_sql": "SELECT s.sname, sc.FundingType FROM satscores s JOIN schools sc ON s.cds = sc.CDSCode WHERE s.cname = 'Riverside' AND s.rtype = 'S' AND s.AvgScrMath > 400",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "State the names and full communication address of high schools in Monterey which has more than 800 free or reduced price meals for ages 15-17?",
+        "predicted_sql": "SELECT s.School, s.Street, s.City, s.State, s.Zip FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"County Name\" = 'Monterey' AND f.\"School Type\" = 'High Schools (Public)' AND f.\"FRPM Count (Ages 5-17)\" > 800",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average score in writing for the schools that were opened after 1991 or closed before 2000? List the school names along with the score. Also, list the communication number of the schools if there is any.",
+        "predicted_sql": "SELECT s.School, s.Phone, sc.AvgScrWrite FROM schools s JOIN satscores sc ON s.CDSCode = sc.cds WHERE (s.OpenDate > '1991-12-31' OR s.ClosedDate < '2000-01-01') AND sc.AvgScrWrite IS NOT NULL",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Consider the average difference between K-12 enrollment and 15-17 enrollment of schools that are locally funded, list the names and DOC type of schools which has a difference above this average.",
+        "predicted_sql": "SELECT s.School, s.DOCType, f.\"Enrollment (K-12)\" - f.\"Enrollment (Ages 5-17)\" AS diff FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE s.FundingType = 'Locally funded' AND (f.\"Enrollment (K-12)\" - f.\"Enrollment (Ages 5-17)\") > (SELECT AVG(f2.\"Enrollment (K-12)\" - f2.\"Enrollment (Ages 5-17)\") FROM frpm f2 JOIN schools s2 ON f2.CDSCode = s2.CDSCode WHERE s2.FundingType = 'Locally funded')",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "When did the first-through-twelfth-grade school with the largest enrollment open?",
+        "predicted_sql": "SELECT s.School, s.OpenDate, f.\"Enrollment (K-12)\" FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"School Type\" = 'K-12 Schools (Public)' ORDER BY f.\"Enrollment (K-12)\" DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which cities have the top 5 lowest enrollment number for students in grades 1 through 12?",
+        "predicted_sql": "SELECT s.City, SUM(f.\"Enrollment (K-12)\") AS total_enrollment FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"Low Grade\" IN ('1','2','3','4','5','6','7','8','9','10','11','12') GROUP BY s.City ORDER BY total_enrollment ASC LIMIT 5",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the eligible free rate of the 10th and 11th schools with the highest enrolment for students in grades 1 through 12?",
+        "predicted_sql": "SELECT \"School Name\", \"Enrollment (K-12)\", \"Free Meal Count (K-12)\", \"Percent (%) Eligible Free (K-12)\" FROM frpm WHERE \"Low Grade\" = '1' AND \"High Grade\" = '12' ORDER BY \"Enrollment (K-12)\" DESC LIMIT 11",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the eligible free or reduced price meal rate for the top 5 schools in grades 1-12 with the highest free or reduced price meal count of the schools with the ownership code 66?",
+        "predicted_sql": "SELECT s.School, f.\"FRPM Count (K-12)\", f.\"Enrollment (K-12)\", f.\"FRPM Count (K-12)\" / f.\"Enrollment (K-12)\" AS rate FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE s.SOC = '66' AND f.\"Low Grade\" = 'K' AND f.\"High Grade\" = '12' ORDER BY f.\"FRPM Count (K-12)\" DESC LIMIT 5",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "If there are any, what are the websites address of the schools with a free meal count of 1,900-2,000 to students aged 5-17? Include the name of the school.",
+        "predicted_sql": "SELECT f.\"School Name\", s.Website FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"Free Meal Count (Ages 5-17)\" BETWEEN 1900 AND 2000",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the free rate for students between the ages of 5 and 17 at the school run by Kacey Gibson?",
+        "predicted_sql": "SELECT s.School, f.`Free Meal Count (Ages 5-17)`, f.`Enrollment (Ages 5-17)`, f.`Percent (%) Eligible Free (Ages 5-17)` FROM schools s JOIN frpm f ON s.CDSCode = f.CDSCode WHERE s.AdmFName1 = 'Kacey' AND s.AdmLName1 = 'Gibson'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the administrator's email address of the chartered school with the fewest students enrolled in grades 1 through 12?",
+        "predicted_sql": "SELECT s.AdmEmail1 FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"Charter School (Y/N)\" = 1 ORDER BY f.\"Enrollment (K-12)\" ASC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Under whose administration is the school with the highest number of students scoring 1500 or more on the SAT? Indicate their full names.",
+        "predicted_sql": "SELECT s.AdmFName1, s.AdmLName1, s.AdmFName2, s.AdmLName2, s.AdmFName3, s.AdmLName3, s.School, sats.NumGE1500 FROM satscores sats JOIN schools s ON sats.cds = s.CDSCode ORDER BY sats.NumGE1500 DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the complete address of the school with the lowest excellence rate? Indicate the Street, City, Zip and State.",
+        "predicted_sql": "SELECT s.Street, s.City, s.Zip, s.State, (CAST(ss.NumGE1500 AS REAL) / ss.NumTstTakr) AS excellence_rate FROM satscores ss JOIN schools s ON s.CDSCode = ss.cds WHERE ss.NumTstTakr > 0 ORDER BY excellence_rate ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What are the webpages for the Los Angeles County school that has between 2,000 and 3,000 test takers?",
+        "predicted_sql": "SELECT s.Website, s.School, s.District, s.County, sc.NumTstTakr FROM schools s JOIN satscores sc ON s.CDSCode = sc.cds WHERE s.County = 'Los Angeles' AND sc.NumTstTakr BETWEEN 2000 AND 3000",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average number of test takers from Fresno schools that opened between 1/1/1980 and 12/31/1980?",
+        "predicted_sql": "SELECT AVG(T2.NumTstTakr) FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.County = 'Fresno' AND strftime('%Y', T1.OpenDate) = '1980'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the telephone number for the school with the lowest average score in reading in Fresno Unified?",
+        "predicted_sql": "SELECT s.Phone FROM satscores sc JOIN schools s ON s.CDSCode = sc.cds WHERE sc.dname = 'Fresno Unified' ORDER BY sc.AvgScrRead ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List the names of virtual schools that are among the top 5 in their respective counties based on average reading scores.",
+        "predicted_sql": "WITH ranked AS (SELECT s.School, s.County, sc.AvgScrRead, RANK() OVER (PARTITION BY s.County ORDER BY sc.AvgScrRead DESC) AS rnk FROM schools s JOIN satscores sc ON s.CDSCode = sc.cds WHERE s.Virtual = 'F' AND sc.AvgScrRead IS NOT NULL) SELECT School, County, AvgScrRead FROM ranked WHERE rnk <= 5 ORDER BY County, rnk",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the type of education offered in the school who scored the highest average in Math?",
+        "predicted_sql": "SELECT s.GSoffered, s.GSserved, s.School, s.District, s.County, sc.AvgScrMath FROM satscores sc JOIN schools s ON s.CDSCode = sc.cds ORDER BY sc.AvgScrMath DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average math score of the school with the lowest average score for all subjects, and in which county is it located?",
+        "predicted_sql": "SELECT sname, cname, AvgScrMath FROM satscores WHERE AvgScrMath IS NOT NULL AND AvgScrRead IS NOT NULL AND AvgScrWrite IS NOT NULL ORDER BY (AvgScrMath + AvgScrRead + AvgScrWrite) ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average writing score of the school who has the highest number of test takers whose total SAT sscores are greater or equal to 1500? Indicate the city to where the school is situated.",
+        "predicted_sql": "SELECT sname, cname, NumTstTakr, NumGE1500, AvgScrWrite FROM satscores ORDER BY NumGE1500 DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the average writing score of each of the schools managed by Ricci Ulrich? List the schools and the corresponding average writing scores.",
+        "predicted_sql": "SELECT s.School, sc.AvgScrWrite FROM schools s JOIN satscores sc ON s.CDSCode = sc.cds WHERE s.AdmFName1 = 'Ricci' AND s.AdmLName1 = 'Ulrich'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which state special schools have the highest number of enrollees from grades 1 through 12?",
+        "predicted_sql": "SELECT f.\"School Name\", f.\"Enrollment (K-12)\" FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE s.DOC = '31' ORDER BY f.\"Enrollment (K-12)\" DESC LIMIT 10",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the monthly average number of schools that opened in Alameda County under the jurisdiction of the Elementary School District in 1980?",
+        "predicted_sql": "SELECT COUNT(*)/12.0 AS monthly_avg FROM schools WHERE County = 'Alameda' AND DOC = '52' AND strftime('%Y', OpenDate) = '1980'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the ratio of merged Unified School District schools in Orange County to merged Elementary School District schools?",
+        "predicted_sql": "SELECT DOC, COUNT(*) FROM schools WHERE County = 'Orange' AND DOC IN ('52','54') GROUP BY DOC",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which different county has the most number of closed schools? Please provide the name of each school as well as the closure date.",
+        "predicted_sql": "SELECT School, ClosedDate FROM schools WHERE StatusType = 'Closed' AND County = 'Los Angeles' ORDER BY ClosedDate",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the postal street address for the school with the 7th highest Math average? Indicate the school's name.",
+        "predicted_sql": "SELECT sname, AvgScrMath FROM satscores WHERE sname IS NOT NULL ORDER BY AvgScrMath DESC LIMIT 7 OFFSET 6",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "In which mailing street address can you find the school that has the lowest average score in reading? Also give the school's name.",
+        "predicted_sql": "SELECT s.School, s.MailStreet FROM schools s JOIN satscores ss ON s.CDSCode = ss.cds ORDER BY ss.AvgScrRead ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total number of schools whose total SAT scores are greater or equal to 1500 whose mailing city is Lakeport?",
+        "predicted_sql": "SELECT COUNT(*) FROM satscores s JOIN schools sc ON s.cds = sc.CDSCode WHERE (s.AvgScrRead + s.AvgScrMath + s.AvgScrWrite) >= 1500 AND sc.MailCity = 'Lakeport'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many test takers are there at the school/s whose mailing city address is in Fresno?",
+        "predicted_sql": "SELECT SUM(s.NumTstTakr) FROM satscores s JOIN schools sc ON s.cds = sc.CDSCode WHERE sc.MailCity = 'Fresno'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please specify all of the schools and their related mailing zip codes that are under Avetik Atoian's administration.",
+        "predicted_sql": "SELECT School, MailZip FROM schools WHERE AdmFName1 = 'Avetik' AND AdmLName1 = 'Atoian'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Of the schools with a mailing state address in California, what is the ratio of the schools located in the county of Colusa against the school located in the county of Humboldt?",
+        "predicted_sql": "SELECT (SELECT COUNT(*) FROM schools WHERE MailState = 'CA' AND County = 'Colusa') * 1.0 / (SELECT COUNT(*) FROM schools WHERE MailState = 'CA' AND County = 'Humboldt') AS ratio",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Of all the schools with a mailing state address in California, how many are active in San Joaquin city?",
+        "predicted_sql": "SELECT COUNT(*) AS cnt FROM schools WHERE MailState = 'CA' AND StatusType = 'Active' AND MailCity = 'San Joaquin'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number and extension number for the school that had the 333rd highest average writing score?",
+        "predicted_sql": "SELECT s.Phone, s.Ext FROM satscores sc JOIN schools s ON s.CDSCode = sc.cds WHERE sc.AvgScrWrite IS NOT NULL ORDER BY sc.AvgScrWrite DESC LIMIT 1 OFFSET 332",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the phone number and extension number for the school with the zip code 95203-3704? Indicate the school's name.",
+        "predicted_sql": "SELECT School, Phone, Ext FROM schools WHERE Zip = '95203-3704'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the website for the schools under the administrations of Mike Larson and Dante Alvarez?",
+        "predicted_sql": "SELECT Website FROM schools WHERE (AdmFName1 = 'Mike' AND AdmLName1 = 'Larson') OR (AdmFName1 = 'Dante' AND AdmLName1 = 'Alvarez')",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What are the websites for all the partially virtual chartered schools located in San Joaquin?",
+        "predicted_sql": "SELECT Website FROM schools WHERE Virtual = 'P' AND Charter = 1 AND County = 'San Joaquin'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many chartered schools located in the city of Hickman are owned by the Elementary School District?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE City = 'Hickman' AND DOC = '52' AND Charter = 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total number of non-chartered schools in the county of Los Angeles with a percent (%) of eligible free meals for grades 1 through 12 that is less than 0.18%?",
+        "predicted_sql": "SELECT COUNT(*) FROM frpm WHERE \"County Name\" = 'Los Angeles' AND \"Charter School (Y/N)\" = 0 AND \"Free Meal Count (K-12)\" * 100.0 / \"Enrollment (K-12)\" < 0.18",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "In chartered schools with charter number 00D2, what are the names of all the administrators? Include the name of the school and the city to which it belongs",
+        "predicted_sql": "SELECT School, City, AdmFName1, AdmLName1, AdmFName2, AdmLName2, AdmFName3, AdmLName3 FROM schools WHERE Charter = 1 AND CharterNum = '00D2'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total number of schools with a mailing city in Hickman belonging to the charter number 00D4?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE MailCity = 'Hickman' AND CharterNum = '00D4'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the ratio in percentage of Santa Clara County schools that are locally funded compared to all other types of charter school funding?",
+        "predicted_sql": "SELECT COUNT(CASE WHEN \"Charter Funding Type\" = 'Locally funded' THEN 1 END) * 100.0 / COUNT(*) AS ratio FROM frpm WHERE \"County Name\" = 'Santa Clara'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Between 1/1/2000 to 12/31/2005, how many directly funded schools opened in the county of Stanislaus?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE County = 'Stanislaus' AND FundingType = 'Directly Funded' AND OpenDate BETWEEN '2000-01-01' AND '2005-12-31'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the total amount of Community College District closure in 1989 in the city of San Francisco?",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE City = 'San Francisco' AND DOC = 'Community College District' AND ClosedDate LIKE '1989%'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which county reported the most number of school closure in the 1980s with school wonership code belonging to Youth Authority Facilities (CEA)?",
+        "predicted_sql": "SELECT County, COUNT(*) AS cnt FROM schools WHERE SOC = '11' AND ClosedDate >= '1980-01-01' AND ClosedDate <= '1989-12-31' GROUP BY County ORDER BY cnt DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Please provide the National Center for Educational Statistics school district identification number for all schools with a School Ownership Code that are part of the State Special Schools.",
+        "predicted_sql": "SELECT NCESDist FROM schools WHERE SOC = '31'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many active and closed District Community Day Schools are there in the county of Alpine?",
+        "predicted_sql": "SELECT StatusType, COUNT(*) AS cnt FROM schools WHERE County = 'Alpine' AND School LIKE '%Community Day%' GROUP BY StatusType",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the district code for the School that does not offer a magnet program in the city of Fresno?",
+        "predicted_sql": "SELECT District, CDSCode FROM schools WHERE City = 'Fresno' AND Magnet = 0",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many students from the ages of 5 to 17 are enrolled at the State Special School school in Fremont for the 2014-2015 academic year?",
+        "predicted_sql": "SELECT s.School, f.\"Enrollment (Ages 5-17)\" FROM schools s JOIN frpm f ON s.CDSCode = f.CDSCode WHERE s.EdOpsCode = 'SSS' AND s.City = 'Fremont' AND f.\"Academic Year\" = '2014-2015'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the free or reduced price meal count for ages 5 to 17 in the Youth Authority School with a mailing street address of PO Box 1040?",
+        "predicted_sql": "",
+        "acc": 0.0,
+        "ok": false,
+        "error": "预测为空 SQL"
+      },
+      {
+        "question": "What is the lowest grade for the District Special Education Consortia School with National Center for Educational Statistics school district identification number of 0613360?",
+        "predicted_sql": "SELECT GSoffered FROM schools WHERE NCESDist = '0613360' AND EdOpsCode = 'SPECON'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the educational level name for the schools with Breakfast Provision 2 in county code 37? Indicate the name of the school.",
+        "predicted_sql": "SELECT \"School Name\", \"School Type\" FROM frpm WHERE \"NSLP Provision Status\" = 'Breakfast Provision 2' AND \"County Code\" = '37'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the city location of the high school level school with Lunch Provision 2 whose lowest grade is 9 and the highest grade is 12 in the county of Merced?",
+        "predicted_sql": "SELECT s.City FROM frpm f JOIN schools s ON f.CDSCode = s.CDSCode WHERE f.\"NSLP Provision Status\" = 'Provision 2' AND f.\"Low Grade\" = '9' AND f.\"High Grade\" = '12' AND f.\"County Name\" = 'Merced' AND s.EILCode = 'HS'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Which schools served a grade span of Kindergarten to 9th grade in the county of Los Angeles and what is its Percent (%) Eligible FRPM (Ages 5-17)?",
+        "predicted_sql": "SELECT \"School Name\", \"Low Grade\", \"High Grade\", \"Percent (%) Eligible FRPM (Ages 5-17)\" FROM frpm WHERE \"County Name\" = 'Los Angeles' AND \"Low Grade\" = 'K' AND \"High Grade\" = '9'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the most common type of grade span served in the city of Adelanto?",
+        "predicted_sql": "SELECT GSserved, COUNT(*) AS cnt FROM schools WHERE City = 'Adelanto' GROUP BY GSserved ORDER BY cnt DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Between San Diego and Santa Barbara, which county offers the most number of schools that does not offer physical building? Indicate the amount.",
+        "predicted_sql": "SELECT County, COUNT(*) AS cnt FROM schools WHERE County IN ('San Diego', 'Santa Barbara') AND Virtual = 'F' GROUP BY County ORDER BY cnt DESC",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the school type of the school with the highest latitude? Indicate the name of the school as well as the latitude coordinates.",
+        "predicted_sql": "SELECT School, Latitude, SOCType FROM schools ORDER BY Latitude DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "In which city can you find the school in the state of California with the lowest latitude coordinates and what is its lowest grade? Indicate the school name.",
+        "predicted_sql": "SELECT s.City, s.School, f.\"Low Grade\" FROM schools s JOIN frpm f ON s.CDSCode = f.CDSCode WHERE s.State = 'CA' ORDER BY s.Latitude ASC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the grade span offered in the school with the highest longitude?",
+        "predicted_sql": "SELECT School, Longitude, GSoffered, GSserved FROM schools ORDER BY ABS(Longitude) DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Of the schools that offers a magnet program serving a grade span of Kindergarten to 8th grade, how many offers Multiple Provision Types? List the number of cities that offers a Kindergarten to 8th grade span and indicate how many schools are there serving such grade span for each city.",
+        "predicted_sql": "SELECT COUNT(*) FROM schools WHERE Magnet = 1 AND GSserved = 'K-8' AND CDSCode IN (SELECT CDSCode FROM frpm WHERE \"NSLP Provision Status\" = 'Multiple Provision Types')",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What are the two most common first names among the school administrators? Indicate the district to which they administer.",
+        "predicted_sql": "SELECT AdmFName1 AS first_name, District, COUNT(*) AS cnt FROM schools WHERE AdmFName1 IS NOT NULL AND AdmFName1 != '' GROUP BY AdmFName1, District ORDER BY cnt DESC LIMIT 2",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the Percent (%) Eligible Free (K-12) in the school administered by an administrator whose first name is Alusine. List the district code of the school.",
+        "predicted_sql": "SELECT s.CDSCode, s.District, s.School, s.AdmFName1, f.`Percent (%) Eligible Free (K-12)`, f.`District Code` FROM schools s JOIN frpm f ON s.CDSCode = f.CDSCode WHERE s.AdmFName1 = 'Alusine'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the administrator's last name that oversees the school with Charter number 40? Indicate the district, the county where the school is situated, and the name of the school.",
+        "predicted_sql": "SELECT s.AdmLName1, s.District, s.County, s.School FROM schools s WHERE s.CharterNum = '0040'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What are the valid e-mail addresses of the administrator of the school located in the San Bernardino county, City of San Bernardino City Unified that opened between 1/1/2009 to 12/31/2010 whose school types are public Intermediate/Middle Schools and Unified Schools?",
+        "predicted_sql": "SELECT AdmEmail1, AdmEmail2, AdmEmail3 FROM schools WHERE County = 'San Bernardino' AND District = 'San Bernardino City Unified' AND OpenDate BETWEEN '2009-01-01' AND '2010-12-31' AND (SOC = '62' OR DOC = '54')",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "What is the administrator's email address for the school with the highest number of test takers who received SAT scores of at least 1500?Provide the name of the school.",
+        "predicted_sql": "SELECT s.School, s.AdmEmail1 FROM schools s JOIN satscores t ON s.School = t.sname WHERE t.sname = 'Lowell High' AND s.AdmEmail1 IS NOT NULL",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many accounts who choose issuance after transaction are staying in East Bohemia region?",
+        "predicted_sql": "SELECT COUNT(*) FROM account a JOIN district d ON a.district_id = d.district_id WHERE a.frequency = 'POPLATEK PO OBRATU' AND d.A3 = 'East Bohemia'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many accounts who have region in Prague are eligible for loans?",
+        "predicted_sql": "SELECT COUNT(*) FROM account a JOIN district d ON a.district_id = d.district_id WHERE d.A3 = 'Prague'",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "The average unemployment ratio of 1995 and 1996, which one has higher percentage?",
+        "predicted_sql": "SELECT AVG(A12) AS avg_1995, AVG(A13) AS avg_1996 FROM district",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List out the no. of districts that have female average salary is more than 6000 but less than 10000?",
+        "predicted_sql": "SELECT * FROM district LIMIT 3",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many male customers who are living in North Bohemia have average salary greater than 8000?",
+        "predicted_sql": "SELECT COUNT(*) FROM client c JOIN district d ON c.district_id = d.district_id WHERE c.gender = 'M' AND d.A3 = 'North Bohemia' AND d.A11 > 8000",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List out the account numbers of female clients who are oldest and has lowest average salary, calculate the gap between this lowest average salary with the highest average salary?",
+        "predicted_sql": "SELECT * FROM trans LIMIT 3",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List out the account numbers of clients who are youngest and have highest average salary?",
+        "predicted_sql": "SELECT a.account_id FROM client c JOIN account a ON a.district_id = c.district_id WHERE c.birth_date = (SELECT MAX(birth_date) FROM client) ORDER BY a.account_id",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "How many customers who choose statement of weekly issuance are Owner?",
+        "predicted_sql": "SELECT COUNT(DISTINCT d.client_id) FROM disp d JOIN account a ON d.account_id = a.account_id WHERE a.frequency = 'POPLATEK TYDNE' AND d.type = 'OWNER'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "List out the id number of client who choose statement of issuance after transaction are Disponent?",
+        "predicted_sql": "SELECT DISTINCT c.client_id FROM client c JOIN disp d ON c.client_id = d.client_id JOIN account a ON d.account_id = a.account_id WHERE d.type = 'DISPONENT' AND a.frequency = 'POPLATEK PO OBRATU'",
+        "acc": 1.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the accounts who have approved loan date in 1997, list out the accounts that have the lowest approved amount and choose weekly issuance statement.",
+        "predicted_sql": "SELECT l.account_id, l.amount, l.date FROM loan l JOIN account a ON l.account_id = a.account_id WHERE l.status = 'A' AND strftime('%Y', l.date) = '1997' AND a.frequency = 'POPLATEK TYDNE' ORDER BY l.amount ASC",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      },
+      {
+        "question": "Among the accounts who have loan validity more than 12 months, list out the accounts that have the highest approved amount and have account opening date in 1993.",
+        "predicted_sql": "SELECT l.account_id, l.amount, a.date FROM loan l JOIN account a ON l.account_id = a.account_id WHERE l.duration > 12 AND strftime('%Y', a.date) = '1993' AND l.amount = (SELECT MAX(l2.amount) FROM loan l2 JOIN account a2 ON l2.account_id = a2.account_id WHERE l2.duration > 12 AND strftime('%Y', a2.date) = '1993')",
+        "acc": 0.0,
+        "ok": true,
+        "error": ""
+      }
+    ],
+    "by_difficulty": {
+      "simple": {
+        "accuracy": 0.4406779661016949,
+        "total": 59
+      },
+      "moderate": {
+        "accuracy": 0.17142857142857143,
+        "total": 35
+      },
+      "challenging": {
+        "accuracy": 0.16666666666666666,
+        "total": 6
+      }
+    }
+  },
+  "delta": -0.2
+}

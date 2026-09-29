@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+node_modules/
+web/dist/
+data/*.db
+data/bird/
+data/eval/bird_train_shots.json
+docs/求职要点.md

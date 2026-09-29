@@ -1,0 +1,52 @@
+{
+  "mode": "single_shot",
+  "accuracy": 0.8,
+  "total": 5,
+  "details": [
+    {
+      "question": "What is the highest eligible free rate for K-12 students in the schools in Alameda County?",
+      "predicted_sql": "SELECT MAX(CAST(\"Free Meal Count (K-12)\" AS REAL) / CAST(\"Enrollment (K-12)\" AS REAL)) FROM frpm WHERE \"County Name\" = 'Alameda'",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "Please list the lowest three eligible free rates for students aged 5-17 in continuation schools.",
+      "predicted_sql": "SELECT (CAST(f.`Free Meal Count (Ages 5-17)` AS REAL) / f.`Enrollment (Ages 5-17)`) AS free_rate FROM frpm f WHERE f.`School Type` = 'Continuation Schools' ORDER BY free_rate ASC LIMIT 3",
+      "acc": 0.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "Please list the zip code of all the charter schools in Fresno County Office of Education.",
+      "predicted_sql": "SELECT T2.Zip FROM frpm AS T1 INNER JOIN schools AS T2 ON T1.CDSCode = T2.CDSCode WHERE T1.`Charter School (Y/N)` = 1 AND T1.`District Name` = 'Fresno County Office of Education'",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "What is the unabbreviated mailing street address of the school with the highest FRPM count for K-12 students?",
+      "predicted_sql": "SELECT T3.MailStreet FROM frpm AS T1 INNER JOIN schools AS T3 ON T1.CDSCode = T3.CDSCode ORDER BY T1.`FRPM Count (K-12)` DESC LIMIT 1",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "Please list the phone numbers of the direct charter-funded schools that are opened after 2000/1/1.",
+      "predicted_sql": "SELECT T3.Phone FROM frpm AS T1 INNER JOIN schools AS T3 ON T1.CDSCode = T3.CDSCode WHERE T1.`Charter School (Y/N)` = 1 AND T1.`Charter Funding Type` = 'Directly funded' AND T3.OpenDate > '2000-01-01'",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    }
+  ],
+  "by_difficulty": {
+    "simple": {
+      "accuracy": 1.0,
+      "total": 3
+    },
+    "moderate": {
+      "accuracy": 0.5,
+      "total": 2
+    }
+  }
+}

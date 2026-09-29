@@ -1,0 +1,97 @@
+{
+  "mode": "single_shot",
+  "accuracy": 0.9166666666666666,
+  "total": 12,
+  "details": [
+    {
+      "question": "一共有多少个用户？",
+      "predicted_sql": "SELECT COUNT(*) AS n FROM users",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "一共有多少个订单？",
+      "predicted_sql": "SELECT COUNT(*) AS n FROM orders",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "每个城市的用户数量是多少？",
+      "predicted_sql": "SELECT city, COUNT(*) AS n FROM users GROUP BY city",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "总销售额是多少？",
+      "predicted_sql": "SELECT SUM(qty * unit_price) AS total FROM order_items",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "销售额最高的商品是哪个？",
+      "predicted_sql": "SELECT p.name AS name, SUM(o.qty * o.unit_price) AS total FROM order_items o JOIN products p ON o.product_id = p.id GROUP BY p.id, p.name ORDER BY total DESC LIMIT 1",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "每个商品类别的销售额是多少？",
+      "predicted_sql": "SELECT p.category AS category, SUM(o.qty * o.unit_price) AS total FROM order_items o JOIN products p ON o.product_id = p.id GROUP BY p.category",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "2026年9月22日至9月28日每天的订单数量是多少？",
+      "predicted_sql": "SELECT created_at, COUNT(*) AS n FROM orders WHERE created_at BETWEEN '2026-09-22' AND '2026-09-28' GROUP BY created_at ORDER BY created_at",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "有多少订单已被取消？",
+      "predicted_sql": "SELECT COUNT(*) AS n FROM orders WHERE status = '已取消'",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "广州用户的订单总数是多少？",
+      "predicted_sql": "SELECT COUNT(*) FROM orders o JOIN users u ON o.user_id = u.id WHERE u.city = '广州'",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "平均每笔订单包含几件商品？",
+      "predicted_sql": "SELECT AVG(cnt) FROM (SELECT order_id, SUM(qty) AS cnt FROM order_items GROUP BY order_id)",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "价格最贵的商品叫什么？",
+      "predicted_sql": "SELECT name FROM products ORDER BY price DESC LIMIT 1",
+      "acc": 1.0,
+      "ok": true,
+      "error": ""
+    },
+    {
+      "question": "每个用户的订单数量，按订单数从高到低排列",
+      "predicted_sql": "SELECT u.name, COUNT(o.id) AS order_count FROM users u LEFT JOIN orders o ON u.id = o.user_id GROUP BY u.id, u.name ORDER BY order_count DESC",
+      "acc": 0.0,
+      "ok": true,
+      "error": ""
+    }
+  ],
+  "by_difficulty": {
+    "未标注": {
+      "accuracy": 0.9166666666666666,
+      "total": 12
+    }
+  }
+}
