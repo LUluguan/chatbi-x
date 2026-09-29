@@ -1,5 +1,7 @@
 # ChatBI-X
 
+![CI](https://github.com/LUluguan/chatbi-x/actions/workflows/ci.yml/badge.svg)
+
 评测驱动的 ChatBI / Text2SQL 数据问答 Agent：用自然语言问关系型数据库，Agent 生成 SQL、
 执行验证、失败自校正，返回表格结果。**每一个能力都有对应测试与可复现的执行准确率指标。**
 
