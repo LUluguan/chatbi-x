@@ -26,6 +26,7 @@ def main():
     ap.add_argument("--datasets-root", default="")
     ap.add_argument("--provider", default="openai_compat")
     ap.add_argument("--k-on", type=int, default=4)
+    ap.add_argument("--fk-closure", action="store_true", help="ON 组开启 join 闭包补桥表")
     ap.add_argument("--mode", default="single_shot", choices=["single_shot", "agent"])
     ap.add_argument("--out", default="")
     args = ap.parse_args()
@@ -38,9 +39,9 @@ def main():
     items = load_dataset(args.dataset)
     shots = []  # 消融不带 few-shot，避免示例对两组的干扰不均
 
-    print(f"组1 linking ON (top-{args.k_on}) ...", flush=True)
+    print(f"组1 linking ON (top-{args.k_on}{', 闭包' if args.fk_closure else ''}) ...", flush=True)
     on = run_eval(items, provider, args.db, mode=args.mode,
-                  top_k_tables=args.k_on, shots=shots)
+                  top_k_tables=args.k_on, shots=shots, fk_closure=args.fk_closure)
     print(f"组2 linking OFF (全 schema) ...", flush=True)
     off = run_eval(items, provider, args.db, mode=args.mode,
                    top_k_tables=None, shots=shots)

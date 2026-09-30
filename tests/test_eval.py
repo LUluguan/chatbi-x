@@ -297,6 +297,41 @@ class TestRunEval:
         off_prompt = p_off.calls[0][0]["content"]
         assert "users" in off_prompt and "zzz_unrelated" in off_prompt
 
+    def test_eval_fk_closure_restores_bridge_table(self, tmp_path, scripted_provider):
+        """run_eval 的 fk_closure 开关：闭包把被挤出 top-k 的桥表补回 prompt。"""
+        import sqlite3
+
+        db = tmp_path / "chain.db"
+        con = sqlite3.connect(db)
+        con.executescript(
+            """
+            CREATE TABLE departments(id INTEGER PRIMARY KEY, name TEXT);
+            CREATE TABLE majors(id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER REFERENCES departments(id));
+            CREATE TABLE students(id INTEGER PRIMARY KEY, name TEXT, gpa REAL, major_id INTEGER REFERENCES majors(id));
+            CREATE TABLE schema_comments(name TEXT PRIMARY KEY, description TEXT);
+            INSERT INTO departments VALUES (1, '计算机学院');
+            INSERT INTO majors VALUES (1, '软件工程', 1);
+            INSERT INTO students VALUES (1, '张三', 3.5, 1);
+            INSERT INTO schema_comments VALUES ('students', '学生表：学生姓名与GPA');
+            INSERT INTO schema_comments VALUES ('departments', '院系表：学校各院系的名称');
+            INSERT INTO schema_comments VALUES ('majors', '专业表：各专业及其所属院系');
+            """
+        )
+        con.commit()
+        con.close()
+        items = [EvalItem(question="每个院系的学生平均GPA是多少", gold_sql="SELECT 1")]
+
+        p_off = scripted_provider(['{"action": "final", "sql": "SELECT 1"}'])
+        run_eval(items, p_off, str(db), mode="single_shot", top_k_tables=2, fk_closure=False)
+        off_prompt = p_off.calls[0][0]["content"]
+        assert "students" in off_prompt and "departments" in off_prompt
+        assert "majors" not in off_prompt  # 前提：桥表被词面相似度挤出 top-2
+
+        p_on = scripted_provider(['{"action": "final", "sql": "SELECT 1"}'])
+        run_eval(items, p_on, str(db), mode="single_shot", top_k_tables=2, fk_closure=True)
+        on_prompt = p_on.calls[0][0]["content"]
+        assert "majors" in on_prompt  # 闭包补回桥表
+
     def test_difficulty_breakdown_reported(self, mini_db):
         items = [
             EvalItem(question="有多少个用户", gold_sql="SELECT COUNT(*) AS n FROM users", difficulty="simple"),

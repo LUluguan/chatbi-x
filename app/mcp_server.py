@@ -44,7 +44,8 @@ def make_tools(settings: Settings | None = None) -> dict:
         )
 
     def ask(question: str) -> str:
-        linked = rank_tables(tables, question, k=s.top_k_tables)
+        # 与线上 /api/chat 保持一致：closure 跟随 CHATBI_FK_CLOSURE
+        linked = rank_tables(tables, question, k=s.top_k_tables, closure=s.fk_closure)
         agent = ChatAgent(provider, linked, s.db_path,
                           max_steps=s.max_agent_steps, max_rows=s.max_rows,
                           timeout_ms=s.sql_timeout_ms)

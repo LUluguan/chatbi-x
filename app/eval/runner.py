@@ -105,7 +105,7 @@ def _categorize(acc: float, pred: "exe.ExecutionResult") -> str:
 def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "single_shot",
              max_rows: int = 50, timeout_ms: int = 3000, top_k_tables: int | None = 6,
              datasets_root: str = "", shots: list[dict] | None = None,
-             eval_max_rows: int = 100_000) -> EvalReport:
+             eval_max_rows: int = 100_000, fk_closure: bool = False) -> EvalReport:
     """eval_max_rows 是判据的比对上限（默认 10 万，视为全量）。
 
     与 max_rows（Agent 内部预览行数）严格分离：判据若按预览行数截断，
@@ -129,7 +129,8 @@ def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "sing
         db = resolve_db(it.db_path or it.db_id, default_db, datasets_root)
         tables_all = tables_for(db)
         # top_k_tables=None = 关闭 linking（全 schema 进 prompt），用于消融对照
-        tables = rank_tables(tables_all, it.question, k=top_k_tables) if top_k_tables else tables_all
+        tables = (rank_tables(tables_all, it.question, k=top_k_tables, closure=fk_closure)
+                  if top_k_tables else tables_all)
         pool = [s for s in shots_pool if s.get("question") != it.question]
         same_db = [s for s in pool if it.db_id and s.get("db_id") == it.db_id]
         shots_k = rank_shots(same_db or pool, it.question, k=2)

@@ -68,6 +68,28 @@ def test_ask_runs_full_agent(tools):
     assert r["rows"] == [[3]]
 
 
+def test_ask_wires_fk_closure(tmp_path, mini_db, monkeypatch):
+    """MCP ask 与线上 /api/chat 行为一致：closure 跟随 CHATBI_FK_CLOSURE。"""
+    import app.mcp_server as mcp_server
+
+    captured = {}
+    real = mcp_server.rank_tables
+
+    def spy(tables, question, k=None, closure=False):
+        captured["closure"] = closure
+        return real(tables, question, k=k)
+
+    monkeypatch.setattr(mcp_server, "rank_tables", spy)
+    eval_file = tmp_path / "eval.json"
+    eval_file.write_text(json.dumps([
+        {"question": "有多少个用户", "gold_sql": "SELECT COUNT(*) AS n FROM users"},
+    ], ensure_ascii=False), encoding="utf-8")
+    s = Settings(db_path=str(mini_db), eval_set_path=str(eval_file), fk_closure=True)
+    tools = mcp_server.make_tools(s)
+    tools["ask"]("请问有多少个用户？")
+    assert captured["closure"] is True
+
+
 def test_mcp_stdio_protocol_end_to_end(tmp_path, mini_db):
     """真走 MCP stdio 协议：握手 → list_tools → call_tool（CI 上的证据层）。"""
     import asyncio
