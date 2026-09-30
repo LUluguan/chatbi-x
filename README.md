@@ -126,9 +126,11 @@ v4 分难度：simple 69.49% vs 基线 61.02%；moderate 57.14% vs 42.86%；chal
 核心教训：**Agent 的价值不是「从零探索」，而是「验证与修正」**——让它站在基线答案的肩膀上，
 执行反馈自校正才有正收益。完整报告（逐题预测 SQL + 失败分类）见 `data/eval/compare_report_v4.json`。
 
-**关于 Schema Linking 的证据边界**：中文注释桥接只在自带 demo_ecom.db（4 表全中文注释）
-上被真实 exercised；BIRD 这两个库 description 为空、表数 ≤4，linking 在该基准上不构成
-有效过滤——本基准的准确率数字**不能**作为 linking 价值的证据。多表中文基准 + 消融在路线图中。
+**关于 Schema Linking 的消融证据**（15 表中文教务库 / 48 题，`data/eval/academic_eval.json`）：
+召回率 Top-8 = 100%（Top-4 = 90.3%，多表 JOIN 需 k 余量）；prompt 省 47-74%；但准确率
+消融显示 **linking 在 15 表规模不提升准确率**（k=4: 83.33% / k=8: 85.42% vs 全 schema 89.58%，
+McNemar p≥0.25）——它的价值是上下文预算与百表级扩展空间，不是本规模的准确率杠杆。
+完整数据与结论见 ARCHITECTURE.md 与 `data/eval/linking_ablation*.json`。
 
 ## 文档
 
@@ -184,6 +186,7 @@ python scripts/smoke_sse.py --base http://127.0.0.1:8010 --min-spread-ms 300
 - [x] W2 数据与基线：BIRD-dev 全量接入 ✓ / few-shot 池（同库优先）✓ / 难度分组报告 ✓ / evidence 注入 ✓ / 模式对比 CLI ✓ / propose-verify 架构（BIRD-100 上 agent 61% vs 基线 51%）✓ / 向量版 linking（待接真实 embedding 源）
 - [x] W3 产品化：SSE 流式输出 ✓ / ECharts 图表推荐 ✓ / MCP server ✓ / Docker 一键部署 ✓
 - [x] W4 发布：架构文档 ✓ / CI（pytest 双版本矩阵 + 前端构建 + **Docker 构建与启动自检**）✓ / 压测报告 ✓ / 全量 1534 题报告（可选，按需运行 `python -m app.eval.compare` 不带 --limit）
+- [x] W5 深水区：15 表中文基准 + linking 消融（召回 100%@k8、prompt 省 47-74%、准确率无增益——诚实结论）✓ / 配对统计（McNemar+Wilson）✓ / rejudge 零成本复测 ✓ / SSE 与真实模型压测实测 ✓ / 三轮外部评审闭环 ✓
 
 ## 致谢与边界
 

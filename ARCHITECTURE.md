@@ -64,20 +64,24 @@
 - 注入面：不拼接用户输入进 SQL（SQL 全部由模型生成并由执行器校验），HTTP 层无鉴权——
   部署定位是个人/内网工具，公网部署需加反向代理鉴权（已知限制）。
 
-## Schema Linking：中文问题 → 英文表名
+## Schema Linking：中文问题 → 英文表名（消融结论：上下文工具，不是准确率杠杆）
 
-中文问句与英文 schema 无词面重叠，两件套桥接：
+中文问句与英文 schema 无词面重叠，桥接两件套：库内 `schema_comments` 中文注释表 +
+CJK 字符 n-gram 相似度排序（纯 Python，无重依赖）；few-shot 检索同打分，同库示例优先。
 
-1. **库内注释表** `schema_comments(name, description)`：建库时写中文业务描述，
-   `load_schema` 折叠进 `TableInfo.description`，同时进入 prompt 与检索语料；
-2. **CJK 字符 n-gram 相似度**（`app/linker.py`）：unigram+bigram 的 cosine，
-   纯 Python 无重依赖；few-shot 检索用同一打分，**同数据库示例优先**（SQL 方言一致性）。
+**多表中文基准实测**（15 表教务库 / 48 题中文问句，`data/eval/academic_eval.json`）：
 
-局限（诚实声明）：纯词面匹配，同义改写无覆盖；**在 BIRD-100 基准上该模块基本未生效**——
-两个库的 description 均为空、表数 ≤4（默认 Top-K 不构成过滤），中文桥接只在自带
-demo_ecom.db（4 表全中文注释）上被真实 exercised。要为 linking 提供证据，需要一个
-10+ 表、带中文注释、中文问句的基准并跑 linking on/off 消融（路线图项）。
-召回实测（BIRD-100）：Top-4≈95%、Top-6=100%，故默认 `top_k_tables=6`。
+- 召回率（金标表进前 k 位）：Top-4 = 90.3%、Top-6 = 98.3%、**Top-8 = 100%**
+  —— 多表 JOIN 的题需要 k 余量，k 过小直接把金标表挤出 prompt（必然失败）；
+- prompt 体积（schema 部分）：全 schema 3,524 字节/题 → k=4 省 74%、k=8 省 47%；
+- **准确率消融**（DeepSeek-Chat，single_shot，无 few-shot，配对）：
+  - k=4：83.33% vs 全 schema 89.58%（McNemar p=0.25，k=4 组含 1 例 exec_fail = 召回缺失所致）
+  - k=8：85.42% vs 89.58%（McNemar p=0.5，exec_fail 消失）
+
+**结论**：在 15 表规模，全 schema 塞得下且准确率最优；linking 的价值是**上下文预算与
+扩展空间**（47-74% 的省宽，schema 数百表时全量方案不可行），而非本规模下的准确率提升。
+诚实边界：纯词面匹配，同义改写无覆盖；注释热词会过度触发（如「学生」使 scholarship_awards
+在无关问题中排进前列）——向量版 linking 与 k 的自适应策略列入路线图。
 
 ## 评测方法学（app/eval/）
 

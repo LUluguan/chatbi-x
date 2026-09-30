@@ -54,3 +54,24 @@ def few_shot_text(shots: list[dict]) -> str:
         lines.append(f"Q: {s['question']}")
         lines.append(f"SQL: {s['sql']}")
     return "\n".join(lines)
+
+
+_TABLE_RE = None  # 延迟编译见 tables_in_sql
+
+
+def tables_in_sql(sql: str) -> set[str]:
+    """从 SQL 里提取表名（FROM/JOIN 后的标识符；忽略子查询括号与字符串字面量）。"""
+    import re
+
+    masked = re.sub(r"'[^']*'", "''", sql or "")
+    found = re.findall(r"(?:\bFROM\b|\bJOIN\b)\s+\"?([a-zA-Z_][a-zA-Z0-9_]*)\"?", masked, re.IGNORECASE)
+    # FROM (SELECT ...) 的 "(" 不会匹配标识符，天然被跳过
+    return {name.lower() for name in found}
+
+
+def recall_at_k(gold_tables: set[str], ranked: list[str], k: int) -> float:
+    """链接召回率：金标表集合出现在排序结果前 k 位中的比例。"""
+    if not gold_tables:
+        return 0.0
+    top = {t.lower() for t in ranked[:k]}
+    return len(gold_tables & top) / len(gold_tables)

@@ -267,6 +267,36 @@ class TestRunEval:
         assert cats["未知问题A"] == "empty_sql"
         assert cats["错误SQL题"] == "result_mismatch"
 
+    def test_linking_off_puts_full_schema_in_prompt(self, tmp_path, scripted_provider):
+        """top_k_tables=None = 关闭 linking：全 schema 进 prompt（消融的对照组）。"""
+        import sqlite3
+
+        db = tmp_path / "three.db"
+        con = sqlite3.connect(db)
+        con.executescript(
+            """
+            CREATE TABLE users(id INTEGER, name TEXT);
+            CREATE TABLE orders(id INTEGER);
+            CREATE TABLE zzz_unrelated(id INTEGER);
+            CREATE TABLE schema_comments(name TEXT PRIMARY KEY, description TEXT);
+            INSERT INTO users VALUES (1,'张三');
+            INSERT INTO schema_comments VALUES ('users','用户表');
+            """
+        )
+        con.commit()
+        con.close()
+        items = [EvalItem(question="有多少个用户", gold_sql="SELECT 1")]
+
+        p_on = scripted_provider(['{"action": "final", "sql": "SELECT 1"}'])
+        run_eval(items, p_on, str(db), mode="single_shot", top_k_tables=1)
+        on_prompt = p_on.calls[0][0]["content"]
+        assert "users" in on_prompt and "zzz_unrelated" not in on_prompt
+
+        p_off = scripted_provider(['{"action": "final", "sql": "SELECT 1"}'])
+        run_eval(items, p_off, str(db), mode="single_shot", top_k_tables=None)
+        off_prompt = p_off.calls[0][0]["content"]
+        assert "users" in off_prompt and "zzz_unrelated" in off_prompt
+
     def test_difficulty_breakdown_reported(self, mini_db):
         items = [
             EvalItem(question="有多少个用户", gold_sql="SELECT COUNT(*) AS n FROM users", difficulty="simple"),

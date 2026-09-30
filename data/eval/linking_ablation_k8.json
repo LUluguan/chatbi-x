@@ -1,0 +1,913 @@
+{
+  "on": {
+    "mode": "single_shot",
+    "accuracy": 0.8541666666666666,
+    "total": 48,
+    "details": [
+      {
+        "question": "一共有多少个院系？",
+        "predicted_sql": "SELECT COUNT(*) FROM departments",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "计算机学院在哪栋楼？",
+        "predicted_sql": "SELECT building FROM departments WHERE name = '计算机学院'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个院系有多少个专业？",
+        "predicted_sql": "SELECT d.name, COUNT(m.id) FROM departments d LEFT JOIN majors m ON d.id = m.dept_id GROUP BY d.id, d.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "软件工程专业属于哪个院系？",
+        "predicted_sql": "SELECT d.name FROM majors m JOIN departments d ON m.dept_id = d.id WHERE m.name = '软件工程'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少名学生？",
+        "predicted_sql": "SELECT COUNT(*) FROM students",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "GPA最高的学生叫什么名字？",
+        "predicted_sql": "SELECT name FROM students ORDER BY gpa DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个年级分别有多少名学生？",
+        "predicted_sql": "SELECT grade, COUNT(*) AS student_count FROM students GROUP BY grade",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2023级的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM students WHERE grade = 2023",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "GPA超过3.5的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM students WHERE gpa > 3.5",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少名教师？",
+        "predicted_sql": "SELECT COUNT(*) FROM teachers",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个院系有多少名教师？",
+        "predicted_sql": "SELECT d.name, COUNT(t.id) AS teacher_count FROM departments d LEFT JOIN teachers t ON d.id = t.dept_id GROUP BY d.id, d.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "职称为教授的教师有多少名？",
+        "predicted_sql": "SELECT COUNT(*) FROM teachers WHERE title = '教授'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少门课程？",
+        "predicted_sql": "SELECT COUNT(*) FROM courses",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "学分大于等于4的课程有哪些？",
+        "predicted_sql": "SELECT name FROM courses WHERE credits >= 4",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每位教师讲授的课程数量是多少？",
+        "predicted_sql": "SELECT t.name, COUNT(c.id) AS course_count FROM teachers t LEFT JOIN courses c ON c.teacher_id = t.id GROUP BY t.id, t.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "数据库原理这门课有多少学分？",
+        "predicted_sql": "SELECT credits FROM courses WHERE name = '数据库原理'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每栋楼有多少间教室？",
+        "predicted_sql": "SELECT building, COUNT(*) AS room_count FROM classrooms GROUP BY building",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "容量最大的教室能坐多少人？",
+        "predicted_sql": "SELECT MAX(capacity) FROM classrooms",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "星期一有哪些教室被排了课？",
+        "predicted_sql": "SELECT DISTINCT c.building, c.room_no FROM schedules s JOIN classrooms c ON s.classroom_id = c.id WHERE s.week_day = 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每间教室各排了多少节课？",
+        "predicted_sql": "SELECT c.id, c.building, c.room_no, COUNT(s.id) AS course_count FROM classrooms c LEFT JOIN schedules s ON c.id = s.classroom_id GROUP BY c.id, c.building, c.room_no",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "星期三第2节有什么课？",
+        "predicted_sql": "SELECT c.name FROM schedules s JOIN courses c ON s.course_id = c.id WHERE s.week_day = 3 AND s.slot = 2",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2026春学期一共有多少条选课记录？",
+        "predicted_sql": "SELECT COUNT(*) FROM enrollments WHERE semester = '2026春'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每门课程的平均成绩是多少？",
+        "predicted_sql": "SELECT c.name, AVG(e.score) AS avg_score FROM courses c JOIN enrollments e ON c.id = e.course_id GROUP BY c.id, c.name",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "有多少条不及格的选课记录？",
+        "predicted_sql": "SELECT COUNT(*) FROM enrollments WHERE score < 60",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "学生陈志远的平均分是多少？",
+        "predicted_sql": "SELECT AVG(e.score) FROM enrollments e JOIN students s ON e.student_id = s.id WHERE s.name = '陈志远'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "选课人数最多的课程是哪门？",
+        "predicted_sql": "SELECT c.name FROM courses c JOIN enrollments e ON c.id = e.course_id GROUP BY c.id, c.name ORDER BY COUNT(e.student_id) DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "国家奖学金的金额是多少元？",
+        "predicted_sql": "SELECT amount FROM scholarships WHERE name = '国家奖学金'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2025年获得奖学金的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(DISTINCT student_id) FROM scholarship_awards WHERE year = 2025",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "获得奖学金次数最多的学生叫什么名字？",
+        "predicted_sql": "SELECT s.name FROM students s JOIN scholarship_awards sa ON s.id = sa.student_id GROUP BY s.id, s.name ORDER BY COUNT(*) DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "金额最高的奖学金是多少元？",
+        "predicted_sql": "SELECT MAX(amount) FROM scholarships",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有几栋宿舍楼？",
+        "predicted_sql": "SELECT COUNT(*) FROM dormitories;",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每栋宿舍楼有多少个房间？",
+        "predicted_sql": "SELECT d.building, COUNT(r.id) AS room_count FROM dormitories d LEFT JOIN dorm_rooms r ON r.dormitory_id = d.id GROUP BY d.id, d.building",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "宿舍房间的总床位容量是多少？",
+        "predicted_sql": "SELECT SUM(capacity) FROM dorm_rooms",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少个社团？",
+        "predicted_sql": "SELECT COUNT(*) FROM clubs",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每种类别的社团有多少个？",
+        "predicted_sql": "SELECT category, COUNT(*) FROM clubs GROUP BY category",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "哪个社团的成员最多？",
+        "predicted_sql": "SELECT c.name FROM clubs c JOIN club_members cm ON c.id = cm.club_id GROUP BY c.id ORDER BY COUNT(*) DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "担任社长的学生都叫什么名字？",
+        "predicted_sql": "SELECT DISTINCT s.name FROM students s JOIN club_members cm ON s.id = cm.student_id WHERE cm.role = '社长'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "文艺类社团有哪些？",
+        "predicted_sql": "SELECT name FROM clubs WHERE category = '文艺'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "参加社团的学生共有多少人？",
+        "predicted_sql": "SELECT COUNT(DISTINCT student_id) FROM club_members",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "没有参加任何社团的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM students WHERE id NOT IN (SELECT student_id FROM club_members)",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "住宿的学生共有多少人？",
+        "predicted_sql": "SELECT COUNT(DISTINCT student_id) FROM dorm_assignments",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个学院的学生人数是多少？",
+        "predicted_sql": "SELECT d.name, COUNT(s.id) FROM departments d JOIN majors m ON m.dept_id = d.id JOIN students s ON s.major_id = m.id GROUP BY d.id, d.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "平均GPA最高的院系是哪个？",
+        "predicted_sql": "SELECT d.name FROM departments d JOIN majors m ON d.id = m.dept_id JOIN students s ON m.id = s.major_id GROUP BY d.id, d.name ORDER BY AVG(s.gpa) DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "选了数据库原理这门课的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(DISTINCT e.student_id) FROM enrollments e JOIN courses c ON e.course_id = c.id WHERE c.name = '数据库原理'",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "每个学期分别有多少条选课记录？",
+        "predicted_sql": "SELECT semester, COUNT(*) FROM enrollments GROUP BY semester",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2025秋学期有不及格记录的课程有几门？",
+        "predicted_sql": "SELECT COUNT(DISTINCT course_id) FROM enrollments WHERE semester = '2025秋' AND score < 60",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "获得国家奖学金的学生的平均GPA是多少？",
+        "predicted_sql": "SELECT AVG(s.gpa) FROM students s JOIN scholarship_awards sa ON s.id = sa.student_id JOIN scholarships sch ON sa.scholarship_id = sch.id WHERE sch.name = '国家奖学金'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "住在A栋宿舍的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM dorm_assignments da JOIN dorm_rooms dr ON da.room_id = dr.id JOIN dormitories d ON dr.dormitory_id = d.id WHERE d.building = 'A栋宿舍'",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      }
+    ],
+    "by_difficulty": {
+      "simple": {
+        "accuracy": 1.0,
+        "total": 21
+      },
+      "moderate": {
+        "accuracy": 0.7894736842105263,
+        "total": 19
+      },
+      "challenging": {
+        "accuracy": 0.625,
+        "total": 8
+      }
+    }
+  },
+  "off": {
+    "mode": "single_shot",
+    "accuracy": 0.8958333333333334,
+    "total": 48,
+    "details": [
+      {
+        "question": "一共有多少个院系？",
+        "predicted_sql": "SELECT COUNT(*) FROM departments",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "计算机学院在哪栋楼？",
+        "predicted_sql": "SELECT building FROM departments WHERE name = '计算机学院'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个院系有多少个专业？",
+        "predicted_sql": "SELECT d.name, COUNT(m.id) AS major_count FROM departments d LEFT JOIN majors m ON d.id = m.dept_id GROUP BY d.id, d.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "软件工程专业属于哪个院系？",
+        "predicted_sql": "SELECT d.name FROM majors m JOIN departments d ON m.dept_id = d.id WHERE m.name = '软件工程'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少名学生？",
+        "predicted_sql": "SELECT COUNT(*) FROM students",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "GPA最高的学生叫什么名字？",
+        "predicted_sql": "SELECT name FROM students ORDER BY gpa DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个年级分别有多少名学生？",
+        "predicted_sql": "SELECT grade, COUNT(*) AS student_count FROM students GROUP BY grade",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2023级的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM students WHERE grade = 2023",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "GPA超过3.5的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM students WHERE gpa > 3.5",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少名教师？",
+        "predicted_sql": "SELECT COUNT(*) FROM teachers",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个院系有多少名教师？",
+        "predicted_sql": "SELECT d.name, COUNT(t.id) FROM departments d LEFT JOIN teachers t ON t.dept_id = d.id GROUP BY d.id, d.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "职称为教授的教师有多少名？",
+        "predicted_sql": "SELECT COUNT(*) FROM teachers WHERE title = '教授'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少门课程？",
+        "predicted_sql": "SELECT COUNT(*) FROM courses",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "学分大于等于4的课程有哪些？",
+        "predicted_sql": "SELECT name FROM courses WHERE credits >= 4",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每位教师讲授的课程数量是多少？",
+        "predicted_sql": "SELECT t.name, COUNT(c.id) AS course_count FROM teachers t LEFT JOIN courses c ON t.id = c.teacher_id GROUP BY t.id, t.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "数据库原理这门课有多少学分？",
+        "predicted_sql": "SELECT credits FROM courses WHERE name = '数据库原理'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每栋楼有多少间教室？",
+        "predicted_sql": "SELECT building, COUNT(*) AS room_count FROM classrooms GROUP BY building",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "容量最大的教室能坐多少人？",
+        "predicted_sql": "SELECT MAX(capacity) FROM classrooms",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "星期一有哪些教室被排了课？",
+        "predicted_sql": "SELECT DISTINCT c.building, c.room_no FROM schedules s JOIN classrooms c ON s.classroom_id = c.id WHERE s.week_day = 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每间教室各排了多少节课？",
+        "predicted_sql": "SELECT c.building, c.room_no, COUNT(s.id) AS course_count FROM classrooms c LEFT JOIN schedules s ON c.id = s.classroom_id GROUP BY c.id, c.building, c.room_no",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "星期三第2节有什么课？",
+        "predicted_sql": "SELECT c.name FROM schedules s JOIN courses c ON s.course_id = c.id WHERE s.week_day = 3 AND s.slot = 2",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2026春学期一共有多少条选课记录？",
+        "predicted_sql": "SELECT COUNT(*) FROM enrollments WHERE semester = '2026春'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每门课程的平均成绩是多少？",
+        "predicted_sql": "SELECT c.name, AVG(e.score) AS avg_score FROM courses c JOIN enrollments e ON c.id = e.course_id GROUP BY c.id, c.name",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "有多少条不及格的选课记录？",
+        "predicted_sql": "SELECT COUNT(*) FROM enrollments WHERE score < 60",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "学生陈志远的平均分是多少？",
+        "predicted_sql": "SELECT AVG(e.score) FROM enrollments e JOIN students s ON e.student_id = s.id WHERE s.name = '陈志远'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "选课人数最多的课程是哪门？",
+        "predicted_sql": "SELECT c.name FROM courses c JOIN enrollments e ON c.id = e.course_id GROUP BY c.id ORDER BY COUNT(*) DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "国家奖学金的金额是多少元？",
+        "predicted_sql": "SELECT amount FROM scholarships WHERE name = '国家奖学金'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2025年获得奖学金的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(DISTINCT student_id) FROM scholarship_awards WHERE year = 2025",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "获得奖学金次数最多的学生叫什么名字？",
+        "predicted_sql": "SELECT s.name FROM students s JOIN scholarship_awards sa ON s.id = sa.student_id GROUP BY s.id, s.name ORDER BY COUNT(*) DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "金额最高的奖学金是多少元？",
+        "predicted_sql": "SELECT MAX(amount) FROM scholarships",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有几栋宿舍楼？",
+        "predicted_sql": "SELECT COUNT(*) FROM dormitories",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每栋宿舍楼有多少个房间？",
+        "predicted_sql": "SELECT d.building, COUNT(r.id) AS room_count FROM dormitories d JOIN dorm_rooms r ON r.dormitory_id = d.id GROUP BY d.id, d.building",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "宿舍房间的总床位容量是多少？",
+        "predicted_sql": "SELECT SUM(capacity) FROM dorm_rooms;",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "一共有多少个社团？",
+        "predicted_sql": "SELECT COUNT(*) FROM clubs",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每种类别的社团有多少个？",
+        "predicted_sql": "SELECT category, COUNT(*) FROM clubs GROUP BY category",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "哪个社团的成员最多？",
+        "predicted_sql": "SELECT c.name FROM clubs c JOIN club_members cm ON c.id = cm.club_id GROUP BY c.id ORDER BY COUNT(*) DESC LIMIT 1",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      },
+      {
+        "question": "担任社长的学生都叫什么名字？",
+        "predicted_sql": "SELECT s.name FROM students s JOIN club_members cm ON s.id = cm.student_id WHERE cm.role = '社长'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "文艺类社团有哪些？",
+        "predicted_sql": "SELECT name FROM clubs WHERE category = '文艺'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "参加社团的学生共有多少人？",
+        "predicted_sql": "SELECT COUNT(DISTINCT student_id) FROM club_members",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "没有参加任何社团的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM students WHERE id NOT IN (SELECT student_id FROM club_members)",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "住宿的学生共有多少人？",
+        "predicted_sql": "SELECT COUNT(DISTINCT student_id) FROM dorm_assignments",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个学院的学生人数是多少？",
+        "predicted_sql": "SELECT d.name, COUNT(s.id) FROM departments d JOIN majors m ON m.dept_id = d.id JOIN students s ON s.major_id = m.id GROUP BY d.id, d.name",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "平均GPA最高的院系是哪个？",
+        "predicted_sql": "SELECT d.name FROM departments d JOIN majors m ON m.dept_id = d.id JOIN students s ON s.major_id = m.id GROUP BY d.id ORDER BY AVG(s.gpa) DESC LIMIT 1",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "选了数据库原理这门课的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM enrollments e JOIN courses c ON e.course_id = c.id WHERE c.name = '数据库原理'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "每个学期分别有多少条选课记录？",
+        "predicted_sql": "SELECT semester, COUNT(*) FROM enrollments GROUP BY semester",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "2025秋学期有不及格记录的课程有几门？",
+        "predicted_sql": "SELECT COUNT(DISTINCT course_id) FROM enrollments WHERE semester = '2025秋' AND score < 60",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "获得国家奖学金的学生的平均GPA是多少？",
+        "predicted_sql": "SELECT AVG(s.gpa) FROM students s JOIN scholarship_awards sa ON s.id = sa.student_id JOIN scholarships sch ON sa.scholarship_id = sch.id WHERE sch.name = '国家奖学金'",
+        "acc": 1.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "correct"
+      },
+      {
+        "question": "住在A栋宿舍的学生有多少人？",
+        "predicted_sql": "SELECT COUNT(*) FROM dorm_assignments da JOIN dorm_rooms dr ON da.room_id = dr.id JOIN dormitories d ON dr.dormitory_id = d.id WHERE d.building = 'A栋宿舍'",
+        "acc": 0.0,
+        "ok": true,
+        "error": "",
+        "truncated": false,
+        "category": "result_mismatch"
+      }
+    ],
+    "by_difficulty": {
+      "simple": {
+        "accuracy": 1.0,
+        "total": 21
+      },
+      "moderate": {
+        "accuracy": 0.8947368421052632,
+        "total": 19
+      },
+      "challenging": {
+        "accuracy": 0.625,
+        "total": 8
+      }
+    }
+  },
+  "paired": {
+    "only_on_correct": 0,
+    "only_off_correct": 2,
+    "mcnemar_p": 0.5
+  }
+}
