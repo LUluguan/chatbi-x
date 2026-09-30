@@ -135,15 +135,48 @@ v4 分难度：simple 69.49% vs 基线 61.02%；moderate 57.14% vs 42.86%；chal
 - [ARCHITECTURE.md](ARCHITECTURE.md) —— 系统总览、Agent 协议规范、安全模型、评测方法学、已知限制
 - `docs/求职要点.md` —— 面试准备材料（内部参考）
 
-## 压测（mock provider，测管线本身不含 LLM 延迟）
+## 压测与流式实测
+
+**管线本身**（mock provider，不含 LLM 延迟）：
 
 ```
 并发=32  总请求=200  成功=200
 吞吐 307.7 req/s   p50/p95/max = 99ms / 120ms / 141ms
 ```
 
-复现: `CHATBI_LLM_PROVIDER=mock python -m uvicorn app.main:app --port 8010` 后运行
-`python scripts/load_test.py --base http://127.0.0.1:8010 --concurrency 32 --total 200`
+**真实模型**（DeepSeek-Chat，4 并发 × 8 请求，同一套 load_test 脚本）：
+
+```
+并发=4  总请求=8  成功=8
+吞吐 3.0 req/s   p50/p95 = 1218ms / 1503ms
+```
+
+对照结论：应用自身开销（SSE 调度 + SQL 执行）相比 LLM 延迟可忽略，
+瓶颈在模型侧 —— 管线优化空间不在吞吐而在提示词与调用次数。
+
+**SSE 增量递送验证**（`scripts/smoke_sse.py`，真实模型事件时间线）：
+
+```
++  1152ms  step    SELECT p.name, SUM(oi.qty * oi.unit_price) AS revenue ...
++  2189ms  step    （final 定稿）
++  2190ms  result  销售额最高的商品是机械键盘，销售额约23425.58
+```
+
+事件随 Agent 执行进度递送（step 先于 result，首末间隔秒级），非末尾一次性缓冲。
+
+复现:
+```bash
+# 管线压测
+CHATBI_LLM_PROVIDER=mock python -m uvicorn app.main:app --port 8010
+python scripts/load_test.py --base http://127.0.0.1:8010 --concurrency 32 --total 200
+# 真实模型压测 / SSE 时间线（产生少量 API 费用）
+CHATBI_LLM_PROVIDER=openai_compat python -m uvicorn app.main:app --port 8010
+python scripts/load_test.py --base http://127.0.0.1:8010 --concurrency 4 --total 8
+python scripts/smoke_sse.py --base http://127.0.0.1:8010 --min-spread-ms 300
+```
+
+前端产物按需加载：echarts 拆为独立 chunk（1,134KB，仅首次渲染图表时下载），
+主包 71.6KB（gzip 29KB）。
 
 ## 路线图
 
