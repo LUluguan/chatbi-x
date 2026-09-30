@@ -43,23 +43,24 @@ def main():
     if DB.exists():
         DB.unlink()
     con = sqlite3.connect(DB)
+    # 外键显式声明：真实世界的 SQLite 导出常带 FK；join 闭包（linker）依赖这些声明补桥表
     con.executescript(
         """
         CREATE TABLE departments(id INTEGER PRIMARY KEY, name TEXT, building TEXT);
-        CREATE TABLE majors(id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER);
-        CREATE TABLE students(id INTEGER PRIMARY KEY, name TEXT, gender TEXT, major_id INTEGER, grade INTEGER, gpa REAL);
-        CREATE TABLE teachers(id INTEGER PRIMARY KEY, name TEXT, title TEXT, dept_id INTEGER);
-        CREATE TABLE courses(id INTEGER PRIMARY KEY, name TEXT, credits INTEGER, dept_id INTEGER, teacher_id INTEGER);
+        CREATE TABLE majors(id INTEGER PRIMARY KEY, name TEXT, dept_id INTEGER REFERENCES departments(id));
+        CREATE TABLE students(id INTEGER PRIMARY KEY, name TEXT, gender TEXT, major_id INTEGER REFERENCES majors(id), grade INTEGER, gpa REAL);
+        CREATE TABLE teachers(id INTEGER PRIMARY KEY, name TEXT, title TEXT, dept_id INTEGER REFERENCES departments(id));
+        CREATE TABLE courses(id INTEGER PRIMARY KEY, name TEXT, credits INTEGER, dept_id INTEGER REFERENCES departments(id), teacher_id INTEGER REFERENCES teachers(id));
         CREATE TABLE classrooms(id INTEGER PRIMARY KEY, building TEXT, room_no INTEGER, capacity INTEGER);
-        CREATE TABLE schedules(id INTEGER PRIMARY KEY, course_id INTEGER, classroom_id INTEGER, week_day INTEGER, slot INTEGER);
-        CREATE TABLE enrollments(id INTEGER PRIMARY KEY, student_id INTEGER, course_id INTEGER, semester TEXT, score INTEGER);
+        CREATE TABLE schedules(id INTEGER PRIMARY KEY, course_id INTEGER REFERENCES courses(id), classroom_id INTEGER REFERENCES classrooms(id), week_day INTEGER, slot INTEGER);
+        CREATE TABLE enrollments(id INTEGER PRIMARY KEY, student_id INTEGER REFERENCES students(id), course_id INTEGER REFERENCES courses(id), semester TEXT, score INTEGER);
         CREATE TABLE scholarships(id INTEGER PRIMARY KEY, name TEXT, amount INTEGER);
-        CREATE TABLE scholarship_awards(id INTEGER PRIMARY KEY, student_id INTEGER, scholarship_id INTEGER, year INTEGER);
+        CREATE TABLE scholarship_awards(id INTEGER PRIMARY KEY, student_id INTEGER REFERENCES students(id), scholarship_id INTEGER REFERENCES scholarships(id), year INTEGER);
         CREATE TABLE dormitories(id INTEGER PRIMARY KEY, building TEXT, capacity INTEGER);
-        CREATE TABLE dorm_rooms(id INTEGER PRIMARY KEY, dormitory_id INTEGER, room_no INTEGER, capacity INTEGER);
-        CREATE TABLE dorm_assignments(id INTEGER PRIMARY KEY, student_id INTEGER, room_id INTEGER);
+        CREATE TABLE dorm_rooms(id INTEGER PRIMARY KEY, dormitory_id INTEGER REFERENCES dormitories(id), room_no INTEGER, capacity INTEGER);
+        CREATE TABLE dorm_assignments(id INTEGER PRIMARY KEY, student_id INTEGER REFERENCES students(id), room_id INTEGER REFERENCES dorm_rooms(id));
         CREATE TABLE clubs(id INTEGER PRIMARY KEY, name TEXT, category TEXT, founded_year INTEGER);
-        CREATE TABLE club_members(id INTEGER PRIMARY KEY, club_id INTEGER, student_id INTEGER, role TEXT);
+        CREATE TABLE club_members(id INTEGER PRIMARY KEY, club_id INTEGER REFERENCES clubs(id), student_id INTEGER REFERENCES students(id), role TEXT);
         CREATE TABLE schema_comments(name TEXT PRIMARY KEY, description TEXT);
         """
     )

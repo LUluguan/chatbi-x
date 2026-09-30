@@ -130,6 +130,8 @@ v4 分难度：simple 69.49% vs 基线 61.02%；moderate 57.14% vs 42.86%；chal
 召回率 Top-8 = 100%（Top-4 = 90.3%，多表 JOIN 需 k 余量）；prompt 省 47-74%；但准确率
 消融显示 **linking 在 15 表规模不提升准确率**（k=4: 83.33% / k=8: 85.42% vs 全 schema 89.58%，
 McNemar p≥0.25）——它的价值是上下文预算与百表级扩展空间，不是本规模的准确率杠杆。
+Join 闭包（外键补桥，`CHATBI_FK_CLOSURE=1`）把 Top-4 完整召回率从 83.3% 提到 97.9%，
+但默认关闭：召回↑不等于准确率↑，准确率消融待做。
 完整数据与结论见 ARCHITECTURE.md 与 `data/eval/linking_ablation*.json`。
 
 ## 文档

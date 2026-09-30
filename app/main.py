@@ -49,7 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     def agent_for(question: str) -> ChatAgent:
         # 每个 question 动态做 schema linking，只把最相关的表放进上下文
-        linked = rank_tables(all_tables, question, k=s.top_k_tables)
+        linked = rank_tables(all_tables, question, k=s.top_k_tables, closure=s.fk_closure)
         return ChatAgent(
             provider, linked, s.db_path,
             max_steps=s.max_agent_steps, max_rows=s.max_rows, timeout_ms=s.sql_timeout_ms,

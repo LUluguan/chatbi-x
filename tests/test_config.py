@@ -31,5 +31,11 @@ def test_cors_origins_parse():
     assert s.cors_origin_list() == ["http://a", "http://b"]
 
 
+def test_fk_closure_default_off_and_env_toggle(monkeypatch):
+    assert Settings().fk_closure is False
+    monkeypatch.setenv("CHATBI_FK_CLOSURE", "true")
+    assert Settings().fk_closure is True
+
+
 def test_project_root_points_at_repo():
     assert (PROJECT_ROOT / "pyproject.toml").exists()

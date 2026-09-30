@@ -6,7 +6,8 @@
 """
 
 import re
-from collections import Counter
+from collections import Counter, defaultdict
+from itertools import combinations
 
 _TOKEN_RE = re.compile(r"[a-zA-Z_][a-zA-Z0-9_]*")
 _CJK_RUN_RE = re.compile(r"[\u4e00-\u9fff]+")
@@ -36,9 +37,98 @@ def _table_text(t) -> str:
     return " ".join(parts)
 
 
-def rank_tables(tables: list, question: str, k: int = 4) -> list:
+def rank_tables(tables: list, question: str, k: int = 4, closure: bool = False) -> list:
     q = textgrams(question)
-    return sorted(tables, key=lambda t: _sim(q, textgrams(_table_text(t))), reverse=True)[:k]
+    ranked = sorted(tables, key=lambda t: _sim(q, textgrams(_table_text(t))), reverse=True)[:k]
+    if not closure:
+        return ranked
+    return join_closure(tables, [t.name for t in ranked])
+
+
+def _singular(name: str) -> str:
+    n = name.lower()
+    if n.endswith("ies") and len(n) > 4:
+        return n[:-3] + "y"
+    if n.endswith(("ses", "xes", "zes")):
+        return n[:-2]
+    if n.endswith("s") and not n.endswith("ss"):
+        return n[:-1]
+    return n
+
+
+def fk_edges(tables: list) -> set[frozenset[str]]:
+    """表之间的连接边：优先用库里声明的外键，其次从 `*_id` 列名推断。
+
+    推断时词干必须在候选表里唯一命中才建边——`room_id` 同时像 dorm_rooms 也像
+    classrooms，这种歧义宁可放弃，也不要猜一张错的表进 prompt。
+    """
+    edges: set[frozenset[str]] = set()
+    names = {t.name for t in tables}
+    for t in tables:
+        for target in getattr(t, "fk_targets", ()):
+            if target in names and target != t.name:
+                edges.add(frozenset((t.name, target)))
+    for t in tables:
+        for c in t.columns:
+            col = c["name"].lower()
+            if not col.endswith("_id"):
+                continue
+            stem = col[:-3]
+            if not stem:
+                continue
+            hits = set()
+            for other in tables:
+                if other.name == t.name:
+                    continue
+                n = other.name.lower()
+                if (n == stem or n in (stem + "s", stem + "es")
+                        or (stem.endswith("y") and n == stem[:-1] + "ies")
+                        or _singular(other.name).startswith(stem)):
+                    hits.add(other.name)
+            if len(hits) == 1:
+                edges.add(frozenset((t.name, hits.pop())))
+    return edges
+
+
+def _shortest_path(adj: dict, a: str, b: str) -> list[str] | None:
+    if a == b:
+        return [a]
+    seen, frontier, parents = {a}, [a], {}
+    while frontier:
+        nxt = []
+        for u in frontier:
+            for v in adj.get(u, ()):
+                if v in seen:
+                    continue
+                seen.add(v)
+                parents[v] = u
+                if v == b:
+                    path, cur = [b], b
+                    while cur != a:
+                        cur = parents[cur]
+                        path.append(cur)
+                    return list(reversed(path))
+                nxt.append(v)
+        frontier = nxt
+    return None
+
+
+def join_closure(tables: list, selected: list[str], edges=None) -> list:
+    """补齐把 selected 连起来所需的桥表，保持种子顺序、不新增无关表。"""
+    by_name = {t.name: t for t in tables}
+    adj = defaultdict(set)
+    for edge in (fk_edges(tables) if edges is None else edges):
+        a, b = tuple(edge)
+        adj[a].add(b)
+        adj[b].add(a)
+    picked = [n for n in selected if n in by_name]
+    bridges = []
+    for a, b in combinations(picked, 2):
+        path = _shortest_path(adj, a, b)
+        if path:
+            bridges.extend(path[1:-1])
+    order = picked + [n for n in bridges if n not in picked]
+    return [by_name[n] for n in dict.fromkeys(order)]
 
 
 def rank_shots(shots: list[dict], question: str, k: int = 2) -> list[dict]:

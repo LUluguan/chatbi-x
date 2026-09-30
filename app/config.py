@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     max_rows: int = 50
     sql_timeout_ms: int = 3000
     top_k_tables: int = 6  # 检索召回实测: Top-4≈95%, Top-6=100%
+    fk_closure: bool = False  # join 闭包补桥表（FK 声明库有效；默认关闭——尚无准确率消融证据）
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
     web_dist: str = ""  # 设置为前端构建产物目录时，由 API 直接托管前端（容器部署用）
 

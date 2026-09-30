@@ -12,6 +12,7 @@ class TableInfo:
     row_count: int = 0
     samples: list[list] = field(default_factory=list)
     description: str = ""  # 来自 schema_comments 的中文业务描述
+    fk_targets: tuple[str, ...] = ()  # 建库时声明的外键指向哪些表
 
 
 def connect_ro(db_path: str) -> sqlite3.Connection:
@@ -42,7 +43,8 @@ def load_schema(db_path: str) -> list[TableInfo]:
             cols = [{"name": r[1], "type": r[2] or ""} for r in con.execute(f'PRAGMA table_info("{t}")')]
             n = con.execute(f'SELECT COUNT(*) FROM "{t}"').fetchone()[0]
             samples = [list(r) for r in con.execute(f'SELECT * FROM "{t}" LIMIT 3')]
-            out.append(TableInfo(t, cols, n, samples, comments.get(t, "")))
+            fks = tuple(r[2] for r in con.execute(f'PRAGMA foreign_key_list("{t}")') if r[2])
+            out.append(TableInfo(t, cols, n, samples, comments.get(t, ""), fks))
         return out
     finally:
         con.close()
