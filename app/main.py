@@ -65,8 +65,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/health")
     def health():
-        return {"status": "ok", "provider": provider.name, "db": s.db_path,
-                "tables": [t.name for t in all_tables]}
+        # 健康探针只暴露存活与计费状态，不泄露 db 路径/表清单等基础设施信息
+        return {"status": "ok", "provider": provider.name, "billing": provider.name != "mock"}
 
     @app.get("/api/schema")
     def schema():
@@ -120,6 +120,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         from fastapi.staticfiles import StaticFiles
 
         app.mount("/", StaticFiles(directory=s.web_dist, html=True), name="web")
+
+    if s.llm_provider != "mock":
+        print(f"⚠ CHATBI_LLM_PROVIDER={s.llm_provider}：对话将调用真实 LLM API（产生费用）。演示请改用 mock。")
 
     return app
 

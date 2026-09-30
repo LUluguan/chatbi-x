@@ -86,8 +86,8 @@ function onKeydown(e) {
         <h1>ChatBI-X</h1>
         <p class="sub">自然语言问数据 · Text2SQL Agent（propose-verify）</p>
       </div>
-      <span class="badge" :class="{ off: provider === '未连接' }">
-        {{ provider === "mock" ? "离线演示模式" : provider === "未连接" ? "后端未连接" : `模型: ${provider}` }}
+      <span class="badge" :class="{ off: provider === '未连接' || provider === 'openai_compat' }">
+        {{ provider === "mock" ? "离线演示模式" : provider === "openai_compat" ? "真实计费模式" : provider === "未连接" ? "后端未连接" : `模型: ${provider}` }}
       </span>
     </header>
 

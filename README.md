@@ -41,8 +41,10 @@ cd web && npm install && npm run dev
 # 打开 http://localhost:5173
 ```
 
-接真实模型：复制 `.env.example` 为 `.env`，填入 `CHATBI_LLM_PROVIDER=openai_compat` 与 API Key
+接真实模型：复制 `.env.example` 为 `.env`，取消 `CHATBI_LLM_PROVIDER=openai_compat` 相关注释并填入 API Key
 （或本地 Ollama 地址）。
+**⚠ 计费提醒**：openai_compat 模式下每次提问/评测都会调用真实 API 产生费用——服务启动横幅、
+`/api/health` 的 `billing` 字段、前端左上角徽章三处都会明确提示；演示请保持 mock。
 
 Docker（单容器，含前端托管）：
 
@@ -80,8 +82,11 @@ python -m app.eval.compare --dataset data/bird/dev.json --datasets-root data/bir
 ## 测试
 
 ```bash
-python -m pytest -q          # 后端 115 个测试
+python -m pytest -q          # 全量测试
 ```
+
+> 注：MCP 协议端到端测试在 CI（Linux）真实运行；本机若 pywin32/site 环境异常，
+> 这 2 条会如实 skip（其余全部应绿）——本地输出形如 `126 passed, 2 skipped` 属正常。
 
 ## 架构
 

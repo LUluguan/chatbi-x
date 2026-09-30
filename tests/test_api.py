@@ -15,7 +15,7 @@ def make_settings(tmp_path, mini_db, **kw):
     return Settings(db_path=str(mini_db), eval_set_path=str(eval_file), **kw)
 
 
-def test_health_reports_provider_and_tables(tmp_path, mini_db):
+def test_health_reports_provider_without_infra_leak(tmp_path, mini_db):
     app = create_app(make_settings(tmp_path, mini_db))
     c = TestClient(app)
     r = c.get("/api/health")
@@ -23,7 +23,35 @@ def test_health_reports_provider_and_tables(tmp_path, mini_db):
     body = r.json()
     assert body["status"] == "ok"
     assert body["provider"] == "mock"
-    assert body["tables"] == ["orders", "users"]
+    assert body["billing"] is False
+    # 健康探针不暴露基础设施信息
+    assert "db" not in body
+    assert "tables" not in body
+
+
+def test_health_flags_real_billing_provider(tmp_path, mini_db):
+    app = create_app(make_settings(
+        tmp_path, mini_db,
+        llm_provider="openai_compat",
+        llm_base_url="http://127.0.0.1:9/v1",
+        llm_api_key="k",
+        llm_model="m",
+        llm_timeout=1.0,
+    ))
+    c = TestClient(app)
+    assert c.get("/api/health").json()["billing"] is True
+
+
+def test_startup_prints_billing_warning_for_real_provider(tmp_path, mini_db, capsys):
+    create_app(make_settings(
+        tmp_path, mini_db,
+        llm_provider="openai_compat",
+        llm_base_url="http://127.0.0.1:9/v1",
+        llm_api_key="k",
+        llm_model="m",
+        llm_timeout=1.0,
+    ))
+    assert "费用" in capsys.readouterr().out
 
 
 def test_schema_endpoint_exposes_description(tmp_path, mini_db):
