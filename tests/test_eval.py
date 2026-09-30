@@ -216,6 +216,57 @@ class TestRunEval:
             assert report.total == 1
             assert "boom" in report.details[0]["error"]
 
+    def test_judge_compares_full_result_sets_not_truncated(self, tmp_path, mini_db, scripted_provider):
+        """金标返回超过 50 行时，判据必须比对全量结果集。
+
+        回归：v3 判据用 max_rows=50 截断两边后比前 50 行（物理顺序），
+        顺序不同/行数不同都会误判。此测试在旧行为下必然失败。
+        """
+        import sqlite3
+
+        big = tmp_path / "big.db"
+        con = sqlite3.connect(big)
+        con.executescript("CREATE TABLE t(id INTEGER PRIMARY KEY, v TEXT);")
+        con.executemany("INSERT INTO t VALUES (?,?)", [(i, f"v{i}") for i in range(1, 121)])
+        con.commit()
+        con.close()
+        gold = "SELECT id FROM t"                       # 120 行，物理顺序
+        pred = "SELECT id FROM t ORDER BY id DESC"      # 同一结果集，倒序输出
+        p = scripted_provider([json.dumps({"action": "final", "sql": pred}, ensure_ascii=False)])
+        report = run_eval([EvalItem(question="q", gold_sql=gold)], p, str(big), mode="single_shot")
+        assert report.accuracy == 1.0
+        assert report.details[0]["truncated"] is False
+
+    def test_truncated_flag_set_when_capped(self, tmp_path, scripted_provider):
+        import sqlite3
+
+        big = tmp_path / "big.db"
+        con = sqlite3.connect(big)
+        con.executescript("CREATE TABLE t(id INTEGER PRIMARY KEY);")
+        con.executemany("INSERT INTO t VALUES (?)", [(i,) for i in range(1, 31)])
+        con.commit()
+        con.close()
+        p = scripted_provider([json.dumps({"action": "final", "sql": "SELECT id FROM t"}, ensure_ascii=False)])
+        report = run_eval([EvalItem(question="q", gold_sql="SELECT id FROM t")],
+                          p, str(big), mode="single_shot", eval_max_rows=10)
+        assert report.details[0]["truncated"] is True
+
+    def test_details_carry_failure_category(self, mini_db):
+        items = [
+            EvalItem(question="有多少个用户", gold_sql="SELECT COUNT(*) AS n FROM users"),
+            EvalItem(question="未知问题A", gold_sql="SELECT COUNT(*) AS n FROM users"),
+            EvalItem(question="错误SQL题", gold_sql="SELECT COUNT(*) AS n FROM users"),
+        ]
+        canned = {
+            "有多少个用户": "SELECT COUNT(*) AS n FROM users",   # correct
+            "错误SQL题": "SELECT 1",                              # 执行成功但结果不匹配
+        }
+        report = run_eval(items, MockProvider(canned), mini_db, mode="single_shot")
+        cats = {d["question"]: d["category"] for d in report.details}
+        assert cats["有多少个用户"] == "correct"
+        assert cats["未知问题A"] == "empty_sql"
+        assert cats["错误SQL题"] == "result_mismatch"
+
     def test_difficulty_breakdown_reported(self, mini_db):
         items = [
             EvalItem(question="有多少个用户", gold_sql="SELECT COUNT(*) AS n FROM users", difficulty="simple"),

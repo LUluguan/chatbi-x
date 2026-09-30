@@ -90,8 +90,14 @@ def resolve_db(ref: str, default_db: str, datasets_root: str = "") -> str:
 
 
 def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "single_shot",
-             max_rows: int = 50, timeout_ms: int = 3000, top_k_tables: int = 4,
-             datasets_root: str = "", shots: list[dict] | None = None) -> EvalReport:
+             max_rows: int = 50, timeout_ms: int = 3000, top_k_tables: int = 6,
+             datasets_root: str = "", shots: list[dict] | None = None,
+             eval_max_rows: int = 100_000) -> EvalReport:
+    """eval_max_rows 是判据的比对上限（默认 10 万，视为全量）。
+
+    与 max_rows（Agent 内部预览行数）严格分离：判据若按预览行数截断，
+    会拿两边物理顺序的前 N 行比较，长结果集上双向失真。
+    """
     schema_cache: dict[str, list] = {}
 
     def tables_for(db: str) -> list:
@@ -129,10 +135,10 @@ def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "sing
             pred_sql, pred_error = "", str(e)
 
         if pred_sql:
-            pred = exe.run_sql(db, pred_sql, max_rows, timeout_ms)
+            pred = exe.run_sql(db, pred_sql, eval_max_rows, timeout_ms)
         else:
             pred = exe.ExecutionResult(error=pred_error or "预测为空 SQL")
-        gold = exe.run_sql(db, it.gold_sql, max_rows, timeout_ms)
+        gold = exe.run_sql(db, it.gold_sql, eval_max_rows, timeout_ms)
         acc = execution_accuracy(pred, gold)
         hits += acc
 
@@ -140,12 +146,25 @@ def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "sing
         stat = diff_stat.setdefault(key, [0, 0])
         stat[0] += acc
         stat[1] += 1
+        if acc == 1.0:
+            category = "correct"
+        elif not pred.ok:
+            if "最大步数" in pred.error:
+                category = "max_steps"
+            elif pred.error == "预测为空 SQL":
+                category = "empty_sql"
+            else:
+                category = "exec_fail"
+        else:
+            category = "result_mismatch"
         details.append({
             "question": it.question,
             "predicted_sql": pred_sql,
             "acc": acc,
             "ok": pred.ok,
             "error": pred.error,
+            "truncated": pred.truncated or gold.truncated,
+            "category": category,
         })
 
     total = len(items)
@@ -174,6 +193,8 @@ def main(argv=None):
     ap.add_argument("--datasets-root", default="")
     ap.add_argument("--shots-file", default="")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--max-rows", type=int, default=100_000,
+                    help="判据比对行数上限（默认 10 万，视为全量比对）")
     ap.add_argument("--out", default="data/eval/last_report.json")
     args = ap.parse_args(argv)
 
@@ -185,7 +206,8 @@ def main(argv=None):
         items = items[: args.limit]
     shots = load_shots(args.shots_file) if args.shots_file else None
     report = run_eval(items, provider, args.db, mode=args.mode,
-                      datasets_root=args.datasets_root, shots=shots)
+                      datasets_root=args.datasets_root, shots=shots,
+                      eval_max_rows=args.max_rows)
 
     print(f"模式: {report.mode}  题数: {report.total}  执行准确率: {report.accuracy:.2%}")
     for k, v in report.by_difficulty.items():

@@ -46,10 +46,18 @@
 成功时反馈包含**SQL 原文回显**与「检查结果列是否恰好为答案」的显式指令，
 防止模型把探索性宽查询直接定稿（v1 的 20 分差距即由此而来）。
 
-## 安全模型
+## 安全模型（三层，各层职责明确）
 
-- **白名单**：仅 `SELECT`/`WITH` 开头；拒绝多语句、`PRAGMA/ATTACH/...`；
-- **只读连接**：`file:...?mode=ro` URI，驱动层杜绝写入；
+1. **白名单校验**（`validate_sql`）：对**掩码后**的文本做检查——先把字符串字面量、
+   引号标识符、行/块注释替换为空白，再判断开头（`SELECT/WITH/VALUES`，允许括号前缀）、
+   单语句（掩码后无内部分号）、禁用词（`PRAGMA/ATTACH/...`）。
+   语境盲视的校验会误杀 6 类合法只读 SQL（如 `SELECT 'a;b'`、`LIKE '%attach%'`、
+   注释含 vacuum——商品名带"吸尘器"的真实业务场景），掩码是必须的；
+2. **只读连接** `mode=ro`：锁主库写入；
+   **已知边界**：`mode=ro` 不约束 `ATTACH` 的外部库——绕过第 1 层的 SQL 可以
+   `ATTACH` 别的文件并写入。第 3 层补上这一格；
+3. **连接级 `PRAGMA query_only=ON`**：ATTACH 写入同样被拦（有回归测试锁定）。
+
 - **超时熔断**：`set_progress_handler` 每 5000 条 VM 指令检查 deadline，
   递归 CTE 死循环实测 200ms 内被杀（sqlite3 会把中断转成 `OperationalError: interrupted`，已映射回超时语义）；
 - **行数截断**：`fetchmany(max_rows+1)` 探测并标记 `truncated`；
@@ -65,17 +73,24 @@
 2. **CJK 字符 n-gram 相似度**（`app/linker.py`）：unigram+bigram 的 cosine，
    纯 Python 无重依赖；few-shot 检索用同一打分，**同数据库示例优先**（SQL 方言一致性）。
 
-局限：纯词面匹配，同义改写无覆盖——向量版 linking 列入路线图（需要 embedding 源）。
+局限（诚实声明）：纯词面匹配，同义改写无覆盖；**在 BIRD-100 基准上该模块基本未生效**——
+两个库的 description 均为空、表数 ≤4（默认 Top-K 不构成过滤），中文桥接只在自带
+demo_ecom.db（4 表全中文注释）上被真实 exercised。要为 linking 提供证据，需要一个
+10+ 表、带中文注释、中文问句的基准并跑 linking on/off 消融（路线图项）。
+召回实测（BIRD-100）：Top-4≈95%、Top-6=100%，故默认 `top_k_tables=6`。
 
 ## 评测方法学（app/eval/）
 
 - **执行准确率**：预测 SQL 与金标 SQL 各自在真实库上执行，比较结果集
-  multiset（行序不敏感、重复行敏感、浮点 6 位容差、NULL/混合类型用类型感知排序键）；
+  multiset（行序不敏感、重复行敏感、浮点 6 位容差、NULL/混合类型用类型感知排序键）。
+  **判据按全量结果集比对**（`eval_max_rows` 默认 10 万行，与 Agent 预览的 50 行严格分离，
+  命中上限的题在报告里带 `truncated` 标记）——早期版本按预览行数截断两边再比，
+  长结果集上双向失真，此缺陷由外部评审发现后修复并有回归测试锁定；
+- **失败分类**：每题带 `category` 字段：`correct / empty_sql / exec_fail / max_steps / result_mismatch`，
+  模式间对比可下钻到题级；
 - **难度分组**：simple/moderate/challenging 分别报告；
 - **泄漏控制**：few-shot 池来自 train 集（9428 条），评测时过滤同题；
-- **oracle check**：mock provider 预设=金标 SQL，验证评测管线本身（BIRD 真实数据 8/8）；
-- **逐题留痕**：`compare_report*.json` 保留每题预测 SQL 与错误分类（empty_sql / exec_fail / result_mismatch），
-  模式间对比可下钻到题级。真实数据接入当轮即抓出 NULL 排序崩溃，即方法学的价值证明。
+- **oracle check**：mock provider 预设=金标 SQL，验证评测管线本身（BIRD 真实数据 8/8）。
 
 ## 部署拓扑
 

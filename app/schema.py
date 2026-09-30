@@ -16,7 +16,10 @@ class TableInfo:
 
 def connect_ro(db_path: str) -> sqlite3.Connection:
     uri = f"file:{Path(db_path).resolve().as_posix()}?mode=ro"
-    return sqlite3.connect(uri, uri=True)
+    con = sqlite3.connect(uri, uri=True)
+    # mode=ro 只锁主库；ATTACH 的外部库不受它约束，query_only 在连接层兜底
+    con.execute("PRAGMA query_only=ON")
+    return con
 
 
 def load_schema(db_path: str) -> list[TableInfo]:

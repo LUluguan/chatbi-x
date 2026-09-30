@@ -22,6 +22,8 @@ def main(argv=None):
     ap.add_argument("--datasets-root", default="")
     ap.add_argument("--shots-file", default="")
     ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--max-rows", type=int, default=100_000,
+                    help="判据比对行数上限（默认 10 万，视为全量比对）")
     ap.add_argument("--out", default="data/eval/compare_report.json")
     args = ap.parse_args(argv)
 
@@ -32,7 +34,8 @@ def main(argv=None):
     if args.limit:
         items = items[: args.limit]
     shots = load_shots(args.shots_file) if args.shots_file else None
-    out = run_compare(items, provider, args.db, datasets_root=args.datasets_root, shots=shots)
+    out = run_compare(items, provider, args.db, datasets_root=args.datasets_root,
+                      shots=shots, eval_max_rows=args.max_rows)
 
     s, a = out["single_shot"], out["agent"]
     print(f"题数: {s['total']}  模型: {args.provider}")

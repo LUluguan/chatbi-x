@@ -4,10 +4,66 @@ import re
 import sqlite3
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
 
-_SELECT_RE = re.compile(r"^\s*(with|select)\b", re.IGNORECASE)
+from .schema import connect_ro
+
+_SELECT_RE = re.compile(r"^[\s()]*(?:select|with|values)\b", re.IGNORECASE)
 _FORBIDDEN_RE = re.compile(r"\b(pragma|attach|detach|vacuum|reindex)\b", re.IGNORECASE)
+
+
+def _mask_literals(sql: str) -> str:
+    """把字符串字面量、引号标识符、注释替换为空白，保留语句结构。
+
+    校验只对掩码后的文本做：字符串里的分号不是语句分隔符，
+    字符串/注释里的 attach、vacuum 也不是命令（评审发现的 6 类误杀）。
+    """
+    out = []
+    i, n = 0, len(sql)
+    while i < n:
+        ch = sql[i]
+        if ch == "'":  # 字符串字面量，'' 为转义
+            i += 1
+            while i < n:
+                if sql[i] == "'":
+                    if i + 1 < n and sql[i + 1] == "'":
+                        i += 2
+                        continue
+                    i += 1
+                    break
+                i += 1
+            out.append("''")
+        elif ch in ('"', "`"):  # 引号标识符
+            q = ch
+            i += 1
+            while i < n:
+                if sql[i] == q:
+                    if q == '"' and i + 1 < n and sql[i + 1] == '"':
+                        i += 2
+                        continue
+                    i += 1
+                    break
+                i += 1
+            out.append(" ")
+        elif ch == "[":  # 方括号标识符
+            i += 1
+            while i < n and sql[i] != "]":
+                i += 1
+            i += 1
+            out.append(" ")
+        elif ch == "-" and i + 1 < n and sql[i + 1] == "-":  # 行注释
+            while i < n and sql[i] != "\n":
+                i += 1
+            out.append(" ")
+        elif ch == "/" and i + 1 < n and sql[i + 1] == "*":  # 块注释
+            i += 2
+            while i + 1 < n and not (sql[i] == "*" and sql[i + 1] == "/"):
+                i += 1
+            i = min(i + 2, n)
+            out.append(" ")
+        else:
+            out.append(ch)
+            i += 1
+    return "".join(out)
 
 
 @dataclass
@@ -22,7 +78,8 @@ class ExecutionResult:
 
 def validate_sql(sql: str) -> str | None:
     """返回拒绝原因；合法返回 None。"""
-    s = (sql or "").strip().rstrip(";").strip()
+    masked = _mask_literals(sql or "")
+    s = masked.strip().rstrip(";").strip()
     if not s:
         return "空 SQL"
     if ";" in s:
@@ -40,8 +97,7 @@ def run_sql(db_path: str, sql: str, max_rows: int = 50, timeout_ms: int = 3000) 
         return ExecutionResult(error=reason)
 
     s = sql.strip().rstrip(";").strip()
-    uri = f"file:{Path(db_path).resolve().as_posix()}?mode=ro"
-    con = sqlite3.connect(uri, uri=True)
+    con = connect_ro(db_path)
     deadline = time.monotonic() + timeout_ms / 1000
 
     def guard():
