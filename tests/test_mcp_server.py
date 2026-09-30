@@ -6,6 +6,11 @@ from app.config import Settings
 from app.mcp_server import TOOLS, make_tools
 
 
+def test_mcp_importable_or_skipped():
+    """MCP 证据层在 CI（Linux，安装 .[mcp]）；本机 pywin32 环境损坏时如实跳过。"""
+    pytest.importorskip("mcp", reason="mcp 未安装或本机 pywin32/site 环境损坏")
+
+
 @pytest.fixture
 def tools(tmp_path, mini_db):
     eval_file = tmp_path / "eval.json"
@@ -61,3 +66,33 @@ def test_ask_runs_full_agent(tools):
     assert r["ok"] is True
     assert r["sql"] == "SELECT COUNT(*) AS n FROM users"
     assert r["rows"] == [[3]]
+
+
+def test_mcp_stdio_protocol_end_to_end(tmp_path, mini_db):
+    """真走 MCP stdio 协议：握手 → list_tools → call_tool（CI 上的证据层）。"""
+    import asyncio
+    import os
+    import sys
+
+    pytest.importorskip("mcp", reason="mcp 未安装或本机 pywin32/site 环境损坏")
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    async def run():
+        env = {**os.environ,
+               "CHATBI_DB_PATH": str(mini_db),
+               "CHATBI_LLM_PROVIDER": "mock",
+               "PYTHONPATH": os.getcwd()}
+        params = StdioServerParameters(command=sys.executable, args=["-m", "app.mcp_server"], env=env)
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                tools = await session.list_tools()
+                result = await session.call_tool("run_sql", {"sql": "SELECT COUNT(*) AS n FROM users"})
+                return {t.name for t in tools.tools}, result
+
+    names, result = asyncio.run(run())
+    assert {"list_tables", "get_schema", "run_sql", "ask"} <= names
+    payload = json.loads(result.content[0].text)
+    assert payload["ok"] is True
+    assert payload["rows"] == [[3]]

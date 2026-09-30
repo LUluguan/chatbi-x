@@ -19,7 +19,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev,mcp]"
       - name: Prepare demo data
         run: python scripts/make_demo_db.py
       - name: Test

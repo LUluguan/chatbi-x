@@ -29,6 +29,8 @@ def main(argv=None):
 
     settings = Settings(llm_provider=args.provider, db_path=args.db,
                         eval_set_path=args.dataset, datasets_root=args.datasets_root)
+    if args.provider == "openai_compat":
+        print("⚠ provider=openai_compat：将调用真实 LLM API，可能产生费用（两种模式共约 3 次 LLM 调用/题）")
     provider = build_provider(settings)
     items = load_dataset(args.dataset)
     if args.limit:
@@ -38,10 +40,12 @@ def main(argv=None):
                       shots=shots, eval_max_rows=args.max_rows)
 
     s, a = out["single_shot"], out["agent"]
+    paired = out["paired"]
     print(f"题数: {s['total']}  模型: {args.provider}")
-    print(f"  single_shot (朴素基线)  : {s['accuracy']:.2%}")
-    print(f"  agent (工具循环+自校正) : {a['accuracy']:.2%}")
-    print(f"  Agent 提升              : {out['delta']:+.2%}")
+    print(f"  single_shot (朴素基线)  : {s['accuracy']:.2%}  95%CI [{paired['wilson']['single_shot'][0]:.1%}, {paired['wilson']['single_shot'][1]:.1%}]")
+    print(f"  agent (propose-verify)  : {a['accuracy']:.2%}  95%CI [{paired['wilson']['agent'][0]:.1%}, {paired['wilson']['agent'][1]:.1%}]")
+    print(f"  配对（McNemar 精确，双侧）: 仅agent对 {paired['only_agent_correct']} vs 仅基线对 {paired['only_baseline_correct']}"
+          f"  p = {paired['mcnemar_p']:.4g}")
     for name, rep in (("single_shot", s), ("agent", a)):
         for k, v in rep.get("by_difficulty", {}).items():
             print(f"  [{name}] {k}: {v['accuracy']:.2%} ({v['total']}题)")

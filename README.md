@@ -21,7 +21,7 @@
 - **模式对比**：`single_shot`（朴素基线）vs `agent`（工具循环+自校正）一条命令出对比报告。
 - **SSE 流式输出**：`POST /api/chat/stream` 实时推送 Agent 执行步骤（查表/执行 SQL/验证），前端打字机式呈现执行过程。
 - **图表推荐**：启发式引擎按结果集形态推荐可视化（日期趋势→折线、占比构成→饼图、分类对比→柱状、复杂结构→表格），前端 ECharts 渲染。
-- **MCP server**：`python -m app.mcp_server` 把 `list_tables / get_schema / run_sql / ask` 暴露为标准 MCP 工具，可接入 Claude Desktop 等任何 MCP 客户端。
+- **MCP server**：`python -m app.mcp_server` 把 `list_tables / get_schema / run_sql / ask` 暴露为标准 MCP 工具，可接入 Claude Desktop 等任何 MCP 客户端；CI 中以**真实 stdio 协议**端到端验证（握手 → list_tools → call_tool）。
 - **Docker 一键部署**：多阶段构建（Node 打包前端 → Python 镜像托管），`docker compose up` 单容器跑通全部。
 - **Web 界面**：Vue 3 对话式问答，实时执行过程、SQL 高亮、图表 + 结果表格。
 
@@ -80,7 +80,7 @@ python -m app.eval.compare --dataset data/bird/dev.json --datasets-root data/bir
 ## 测试
 
 ```bash
-python -m pytest -q          # 后端 56 个测试
+python -m pytest -q          # 后端 115 个测试
 ```
 
 ## 架构
@@ -97,17 +97,23 @@ python -m pytest -q          # 后端 56 个测试
 
 基准组成：BIRD-dev 前 100 题 = **89 题 california_schools + 11 题 financial**（dev.json 按库分组，limit 100 跨到了第二个库）。DeepSeek-Chat，few-shot 池同库优先，evidence 注入。
 
-> **判据修正说明**：v1–v3 使用了有缺陷的判据——预测与金标都按 50 行截断后比对物理顺序的
-> 前 50 行，长结果集（最大 7,806 行）上双向失真。该缺陷由外部评审发现（同一道题，正确 SQL
-> 与改写 SQL 分别被判 1.0 和 0.0）。判据已修复为全量比对（`eval_max_rows=10万`，命中上限
-> 的题带 `truncated` 标记；v4 复测中该标记为 0，即全部为全量比对）。**头条数字以 v4 为准。**
+> **判据修正说明**：v1–v3 的判据把预测与金标都按 50 行截断后比对物理顺序的前 50 行。
+> 该缺陷在逻辑上可双向失真（等价改写 `SELECT * FROM (gold) ORDER BY 1` 被判 0.0——有反向验证），
+> 但**在本样本上的净效应是单向虚高**：用修复后判据重判 v3 的既有预测（零 LLM 成本，
+> `python -m app.eval.rejudge`），single_shot 51%→49%、agent 61%→58%，翻转全部是「对→错」。
+> v4 为真实重跑（含采样方差与 top_k=6），**headline 数字以 v4 为准**。
 
 | 版本 | single_shot（朴素基线） | agent | 关键改动 |
 |---|---|---|---|
 | v1 | 53.00% | 33.00% | 初版反馈话术诱导模型把探索性宽查询直接定稿（22 题翻车全因如此） |
 | v2 | 51.00% | 45.00% | 反馈回显 SQL + 显式检查「结果列恰为答案」；自校正救回 10 题 |
-| v3* | 51.00% | 61.00% | **propose-verify 架构**（判据有缺陷，保留仅为呈现迭代轨迹） |
+| v3* | 51.00% | 61.00% | **propose-verify 架构**（判据有缺陷，保留仅为呈现迭代轨迹；重判后 49% / 58%） |
 | **v4** | **53.00%** | **63.00%（+10）** | 修复后判据全量复测 + top_k 6（召回 100%）；**agent 的失败全部为 result_mismatch，exec_fail/empty_sql/max_steps 均为 0** |
+
+**统计呈现（配对视角）**：同一批 100 题是配对实验——仅 agent 对 12 题、仅基线对 2 题，
+McNemar 精确检验（双侧）**p = 0.0129**。两个边际准确率的 95% Wilson 区间
+（[43.3%, 62.5%] 与 [53.2%, 71.8%]）虽有重叠，但配对检验显著——「自校正有正收益」是
+统计结论而非观感，这也是为什么不该只用「63% vs 53%」来呈现。
 
 v4 分难度：simple 69.49% vs 基线 61.02%；moderate 57.14% vs 42.86%；challenging 样本仅 6 题不计入结论。
 模式间逐题对比：基线错→agent 对 12 题，基线对→agent 错 2 题（自校正净收益 +10）。

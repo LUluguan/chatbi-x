@@ -279,6 +279,54 @@ class TestRunEval:
         assert report.by_difficulty["challenging"] == {"total": 1, "accuracy": 0.0}
 
 
+class TestRejudge:
+    def test_rejudge_reexecutes_predictions_with_current_judge(self, mini_db, tmp_path):
+        from app.eval.runner import rejudge
+
+        old_report = {
+            "mode": "single_shot",
+            "accuracy": 1.0,
+            "total": 2,
+            "details": [
+                {"question": "有多少个用户", "predicted_sql": "SELECT COUNT(*) AS n FROM users", "acc": 1.0, "ok": True, "error": ""},
+                {"question": "有多少个订单", "predicted_sql": "SELECT nope FROM users", "acc": 0.0, "ok": False, "error": "no such column"},
+            ],
+        }
+        f = tmp_path / "old.json"
+        f.write_text(json.dumps(old_report), encoding="utf-8")
+        dataset = tmp_path / "d.json"
+        dataset.write_text(json.dumps([
+            {"question": "有多少个用户", "gold_sql": "SELECT COUNT(*) AS n FROM users"},
+            {"question": "有多少个订单", "gold_sql": "SELECT COUNT(*) AS n FROM orders"},
+        ], ensure_ascii=False), encoding="utf-8")
+        rep = rejudge(str(f), str(dataset), mini_db)
+        assert rep.mode == "single_shot (rejudged)"
+        assert rep.total == 2
+        assert rep.accuracy == 0.5
+        assert rep.details[0]["category"] == "correct"
+        assert rep.details[1]["category"] == "exec_fail"
+        assert rep.details[0]["truncated"] is False
+
+    def test_rejudge_handles_compare_format(self, mini_db, tmp_path):
+        from app.eval.runner import rejudge
+
+        old = {
+            "single_shot": {"mode": "single_shot", "accuracy": 0.0, "total": 1, "details": [
+                {"question": "有多少个用户", "predicted_sql": "SELECT nope", "acc": 0.0, "ok": False, "error": "x"}]},
+            "agent": {"mode": "agent", "accuracy": 1.0, "total": 1, "details": [
+                {"question": "有多少个用户", "predicted_sql": "SELECT COUNT(*) AS n FROM users", "acc": 1.0, "ok": True, "error": ""}]},
+        }
+        f = tmp_path / "old.json"
+        f.write_text(json.dumps(old), encoding="utf-8")
+        dataset = tmp_path / "d.json"
+        dataset.write_text(json.dumps([
+            {"question": "有多少个用户", "gold_sql": "SELECT COUNT(*) AS n FROM users"},
+        ], ensure_ascii=False), encoding="utf-8")
+        out = rejudge(str(f), str(dataset), mini_db)
+        assert out["single_shot"].details[0]["category"] == "exec_fail"
+        assert out["agent"].accuracy == 1.0
+
+
 class TestRunCompare:
     def test_compare_returns_both_modes_and_delta(self, mini_db):
         items = [EvalItem(question="有多少个用户", gold_sql="SELECT COUNT(*) AS n FROM users")]
@@ -289,3 +337,19 @@ class TestRunCompare:
         assert out["delta"] == 0.0
         assert out["single_shot"]["mode"] == "single_shot"
         assert out["agent"]["mode"] == "agent"
+
+    def test_compare_includes_paired_statistics(self, mini_db):
+        items = [
+            EvalItem(question="有多少个用户", gold_sql="SELECT COUNT(*) AS n FROM users"),
+            EvalItem(question="未知问题A", gold_sql="SELECT COUNT(*) AS n FROM users"),
+        ]
+        canned = {"有多少个用户": "SELECT COUNT(*) AS n FROM users"}
+        out = run_compare(items, MockProvider(canned), mini_db)
+        paired = out["paired"]
+        # mock 下两模式预测一致：无不一致对 → p=1.0
+        assert paired["only_agent_correct"] == 0
+        assert paired["only_baseline_correct"] == 0
+        assert paired["mcnemar_p"] == 1.0
+        lo, hi = paired["wilson"]["agent"]
+        assert 0.0 <= lo <= hi <= 1.0
+        assert paired["wilson"]["agent"] == paired["wilson"]["single_shot"]

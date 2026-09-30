@@ -18,6 +18,7 @@ from ..linker import rank_shots, rank_tables
 from ..providers import ProviderError, build_provider
 from ..schema import load_schema
 from .metrics import execution_accuracy
+from .stats import mcnemar_exact_bilateral, wilson_interval
 
 
 @dataclass
@@ -89,6 +90,18 @@ def resolve_db(ref: str, default_db: str, datasets_root: str = "") -> str:
     raise FileNotFoundError(f"找不到数据库 {ref}（未提供 --datasets-root 且不是有效路径）")
 
 
+def _categorize(acc: float, pred: "exe.ExecutionResult") -> str:
+    if acc == 1.0:
+        return "correct"
+    if not pred.ok:
+        if "最大步数" in pred.error:
+            return "max_steps"
+        if pred.error == "预测为空 SQL":
+            return "empty_sql"
+        return "exec_fail"
+    return "result_mismatch"
+
+
 def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "single_shot",
              max_rows: int = 50, timeout_ms: int = 3000, top_k_tables: int = 6,
              datasets_root: str = "", shots: list[dict] | None = None,
@@ -146,17 +159,6 @@ def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "sing
         stat = diff_stat.setdefault(key, [0, 0])
         stat[0] += acc
         stat[1] += 1
-        if acc == 1.0:
-            category = "correct"
-        elif not pred.ok:
-            if "最大步数" in pred.error:
-                category = "max_steps"
-            elif pred.error == "预测为空 SQL":
-                category = "empty_sql"
-            else:
-                category = "exec_fail"
-        else:
-            category = "result_mismatch"
         details.append({
             "question": it.question,
             "predicted_sql": pred_sql,
@@ -164,7 +166,7 @@ def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "sing
             "ok": pred.ok,
             "error": pred.error,
             "truncated": pred.truncated or gold.truncated,
-            "category": category,
+            "category": _categorize(acc, pred),
         })
 
     total = len(items)
@@ -173,14 +175,94 @@ def run_eval(items: list[EvalItem], provider, default_db: str, mode: str = "sing
                       total=total, details=details, by_difficulty=by_difficulty)
 
 
+def rejudge(report_path: str, dataset_path: str, default_db: str,
+            datasets_root: str = "", eval_max_rows: int = 100_000,
+            timeout_ms: int = 3000):
+    """用当前判据重判已有报告的预测，不重新调用 LLM（判据修正是零成本复测）。
+
+    支持单模式报告（含 details）与 compare 格式（single_shot/agent 两个键）。
+    """
+    old = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    items_by_q = {it.question: it for it in load_dataset(dataset_path)}
+    if "details" in old:
+        return _rejudge_one(old, items_by_q, default_db, datasets_root, eval_max_rows, timeout_ms)
+    return {
+        mode: _rejudge_one(old[mode], items_by_q, default_db, datasets_root, eval_max_rows, timeout_ms)
+        for mode in ("single_shot", "agent") if mode in old
+    }
+
+
+def _rejudge_one(old: dict, items_by_q: dict, default_db: str,
+                 datasets_root: str, eval_max_rows: int, timeout_ms: int) -> EvalReport:
+    details = []
+    diff_stat: dict[str, list[int]] = {}
+    hits = 0
+    scored = 0
+    for d in old.get("details", []):
+        it = items_by_q.get(d.get("question", ""))
+        if it is None:
+            details.append({**d, "category": "missing_in_dataset"})
+            continue
+        db = resolve_db(it.db_path or it.db_id, default_db, datasets_root)
+        pred_sql = d.get("predicted_sql") or ""
+        if pred_sql:
+            pred = exe.run_sql(db, pred_sql, eval_max_rows, timeout_ms)
+        else:
+            pred = exe.ExecutionResult(error="预测为空 SQL")
+        gold = exe.run_sql(db, it.gold_sql, eval_max_rows, timeout_ms)
+        acc = execution_accuracy(pred, gold)
+        hits += acc
+        scored += 1
+        stat = diff_stat.setdefault(it.difficulty or "未标注", [0, 0])
+        stat[0] += acc
+        stat[1] += 1
+        details.append({
+            "question": it.question,
+            "predicted_sql": pred_sql,
+            "acc": acc,
+            "ok": pred.ok,
+            "error": pred.error,
+            "truncated": pred.truncated or gold.truncated,
+            "category": _categorize(acc, pred),
+        })
+    return EvalReport(
+        mode=f"{old.get('mode', '?')} (rejudged)",
+        accuracy=hits / scored if scored else 0.0,
+        total=scored,
+        details=details,
+        by_difficulty={k: {"accuracy": v[0] / v[1], "total": v[1]} for k, v in diff_stat.items()},
+    )
+
+
 def run_compare(items: list[EvalItem], provider, default_db: str, **kw) -> dict:
-    """同一评测集跑 single_shot 与 agent 两种模式，返回可序列化对比结果。"""
+    """同一评测集跑 single_shot 与 agent 两种模式，返回可序列化对比结果。
+
+    附带配对统计：边际准确率的 Wilson 区间可能重叠，但配对 McNemar 才是
+    「自校正是否有正收益」的正确判据。
+    """
     rep_single = run_eval(items, provider, default_db, mode="single_shot", **kw)
     rep_agent = run_eval(items, provider, default_db, mode="agent", **kw)
+    s_by_q = {d["question"]: d for d in rep_single.details}
+    a_by_q = {d["question"]: d for d in rep_agent.details}
+    only_agent = sum(1 for q in a_by_q if a_by_q[q]["acc"] == 1.0 and s_by_q[q]["acc"] != 1.0)
+    only_base = sum(1 for q in s_by_q if s_by_q[q]["acc"] == 1.0 and a_by_q[q]["acc"] != 1.0)
+
+    def _hits(rep: EvalReport) -> int:
+        return int(round(sum(d["acc"] for d in rep.details)))
+
     return {
         "single_shot": asdict(rep_single),
         "agent": asdict(rep_agent),
         "delta": rep_agent.accuracy - rep_single.accuracy,
+        "paired": {
+            "only_agent_correct": only_agent,
+            "only_baseline_correct": only_base,
+            "mcnemar_p": mcnemar_exact_bilateral(only_base, only_agent),
+            "wilson": {
+                "single_shot": list(wilson_interval(_hits(rep_single), rep_single.total)),
+                "agent": list(wilson_interval(_hits(rep_agent), rep_agent.total)),
+            },
+        },
     }
 
 
@@ -200,6 +282,8 @@ def main(argv=None):
 
     settings = Settings(llm_provider=args.provider, db_path=args.db,
                         eval_set_path=args.dataset, datasets_root=args.datasets_root)
+    if args.provider == "openai_compat":
+        print("⚠ provider=openai_compat：将调用真实 LLM API，可能产生费用")
     provider = build_provider(settings)
     items = load_dataset(args.dataset)
     if args.limit:
