@@ -97,25 +97,23 @@ python -m pytest -q          # 后端 56 个测试
 
 基准组成：BIRD-dev 前 100 题 = **89 题 california_schools + 11 题 financial**（dev.json 按库分组，limit 100 跨到了第二个库）。DeepSeek-Chat，few-shot 池同库优先，evidence 注入。
 
-> **判据修正说明（重要）**：下表 v1–v3 使用了有缺陷的判据——预测与金标都按 50 行截断后
-> 比对物理顺序的前 50 行，长结果集（最大 7,806 行）上双向失真。该缺陷由外部评审发现
-> （同一道题，正确 SQL 与改写 SQL 分别被判 1.0 和 0.0）。判据已修复为全量比对
-> （`eval_max_rows=10万`，命中上限的题带 `truncated` 标记），**修复后的 v4 复测数字见
-> `data/eval/compare_report_v4.json`**——引用本表数字前请以 v4 为准。
+> **判据修正说明**：v1–v3 使用了有缺陷的判据——预测与金标都按 50 行截断后比对物理顺序的
+> 前 50 行，长结果集（最大 7,806 行）上双向失真。该缺陷由外部评审发现（同一道题，正确 SQL
+> 与改写 SQL 分别被判 1.0 和 0.0）。判据已修复为全量比对（`eval_max_rows=10万`，命中上限
+> 的题带 `truncated` 标记；v4 复测中该标记为 0，即全部为全量比对）。**头条数字以 v4 为准。**
 
 | 版本 | single_shot（朴素基线） | agent | 关键改动 |
 |---|---|---|---|
 | v1 | 53.00% | 33.00% | 初版反馈话术诱导模型把探索性宽查询直接定稿（22 题翻车全因如此） |
 | v2 | 51.00% | 45.00% | 反馈回显 SQL + 显式检查「结果列恰为答案」；自校正救回 10 题 |
-| v3 | 51.00% | 61.00%* | **propose-verify 架构**：naive 生成草案，Agent 只做执行验证与修正 |
+| v3* | 51.00% | 61.00% | **propose-verify 架构**（判据有缺陷，保留仅为呈现迭代轨迹） |
+| **v4** | **53.00%** | **63.00%（+10）** | 修复后判据全量复测 + top_k 6（召回 100%）；**agent 的失败全部为 result_mismatch，exec_fail/empty_sql/max_steps 均为 0** |
 
-\* v3 数字基于有缺陷的判据，保留只为呈现迭代轨迹；结论（propose-verify 显著优于 naive）
-有待 v4 复测确认。
-
-v3 分难度：simple 66.10% vs 基线 59.32%；moderate 57.14% vs 40.00%；challenging 样本仅 6 题不计入结论。
+v4 分难度：simple 69.49% vs 基线 61.02%；moderate 57.14% vs 42.86%；challenging 样本仅 6 题不计入结论。
+模式间逐题对比：基线错→agent 对 12 题，基线对→agent 错 2 题（自校正净收益 +10）。
 
 核心教训：**Agent 的价值不是「从零探索」，而是「验证与修正」**——让它站在基线答案的肩膀上，
-执行反馈自校正才有正收益。完整报告（逐题预测 SQL + 失败分类）见 `data/eval/compare_report_v3.json`。
+执行反馈自校正才有正收益。完整报告（逐题预测 SQL + 失败分类）见 `data/eval/compare_report_v4.json`。
 
 **关于 Schema Linking 的证据边界**：中文注释桥接只在自带 demo_ecom.db（4 表全中文注释）
 上被真实 exercised；BIRD 这两个库 description 为空、表数 ≤4，linking 在该基准上不构成
